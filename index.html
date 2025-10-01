@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Reembolsos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .highlight {
+            background-color: #f9c74f;
+            color: var(--dark);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .upload-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            padding: 16px 32px;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s ease;
+        }
+        
+        .file-label:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 968px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 10px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border-left: 5px solid var(--primary);
+        }
+        
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 320px;
+            width: 100%;
+            margin: 15px 0;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-top: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .pagado {
+            color: #27ae60;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+        
+        .instructions {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .instructions h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            padding-left: 25px;
+            line-height: 1.8;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .table-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .search-box {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 50px;
+            width: 250px;
+            font-size: 0.9rem;
+        }
+        
+        .items-per-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .items-per-page select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            padding: 10px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .pagination button:hover {
+            background: #219653;
+        }
+        
+        .pagination button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .export-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+        }
+        
+        .btn-download {
+            background: linear-gradient(to right, #27ae60, #219653);
+            color: white;
+        }
+        
+        .btn-download:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .amount-display {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            height: 15px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            border-radius: 10px;
+            width: 100%;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-size: 1.5rem;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dashboard de Reembolsos Pagados</h1>
+            <p class="subtitle">Sistema de visualización de reembolsos por valor de <span class="highlight">$4,320,000 pesos</span></p>
+        </header>
+        
+        <div class="upload-section">
+            <h2>Cargar datos desde Google Sheets</h2>
+            <div class="file-upload">
+                <label for="csv-file" class="file-label">
+                    <span>📁 Seleccionar archivo CSV</span>
+                </label>
+                <input type="file" id="csv-file" class="file-input" accept=".csv">
+                <p>Exporta tu Google Sheets como CSV (Archivo → Descargar → CSV)</p>
+            </div>
+            <div id="status-message" class="status-message hidden"></div>
+        </div>
+        
+        <div id="dashboard-content" class="hidden">
+            <div class="amount-display">
+                <div>Monto total distribuido: <span class="highlight">$4,320,000 pesos</span></div>
+                <div>Monto individual: <span class="highlight">$90,000 pesos</span> por persona</div>
+                <div>Total de personas beneficiadas: <span id="total-personas" class="highlight">48</span></div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress"></div>
+            </div>
+            
+            <div class="export-buttons">
+                <button class="btn btn-download" id="download-pdf">
+                    <span>📥 Descargar Reporte PDF Completo</span>
+                </button>
+            </div>
+            
+            <div class="dashboard">
+                <div class="card">
+                    <h2 class="card-title">Resumen de Reembolsos</h2>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div id="total-number" class="stat-number">48</div>
+                            <div class="stat-label">Total Personas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div id="monto-total" class="stat-number">$4,320,000</div>
+                            <div class="stat-label">Monto Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div id="monto-individual" class="stat-number">$90,000</div>
+                            <div class="stat-label">Monto Individual</div>
+                        </div>
+                        <div class="stat-card">
+                            <div id="completado-number" class="stat-number">100%</div>
+                            <div class="stat-label">Completado</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="distribucionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title">Distribución por Sexo</h2>
+                    <div class="chart-container">
+                        <canvas id="sexoChart"></canvas>
+                    </div>
+                    
+                    <h2 class="card-title">Distribución por Tipo de Sangre</h2>
+                    <div class="chart-container">
+                        <canvas id="sangreChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2 class="card-title">Registros de Reembolsos Pagados</h2>
+                
+                <div class="table-controls">
+                    <input type="text" id="search-input" class="search-box" placeholder="Buscar...">
+                    <div class="items-per-page">
+                        <span>Mostrar</span>
+                        <select id="items-per-page-select">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>registros</span>
+                    </div>
+                </div>
+                
+                <div class="table-container">
+                    <table id="data-table">
+                        <thead>
+                            <tr>
+                                <th>Documento</th>
+                                <th>Nombre Completo</th>
+                                <th>Sexo</th>
+                                <th>Fecha Nacimiento</th>
+                                <th>Tipo Sangre</th>
+                                <th>Estado</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Los datos se insertarán aquí mediante JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination">
+                    <button id="prev-page" disabled>Anterior</button>
+                    <span id="page-info">Página 1 de 1</span>
+                    <button id="next-page" disabled>Siguiente</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>¿Cómo usar este dashboard?</h3>
+            <ol>
+                <li>Completa tu registro de reembolsos en Google Sheets con las columnas: Documento, Apellidos, Nombres, Sexo, Fecha de Nacimiento, Tipo de Sangre</li>
+                <li>Exporta los datos: Ve a <strong>Archivo → Descargar → Valores separados por comas (.csv)</strong></li>
+                <li>Haz clic en "Seleccionar archivo CSV" arriba y elige el archivo que descargaste</li>
+                <li>Los gráficos y estadísticas se generarán automáticamente con tus datos reales</li>
+                <li>Haz clic en "Descargar Reporte PDF Completo" para obtener un reporte con gráficos y lista de personas</li>
+                <li>Puedes buscar y paginar los resultados en la tabla</li>
+            </ol>
+        </div>
+        
+        <div class="footer">
+            <p>Sistema de Control de Reembolsos © 2025 - Innovaris Marketing Solutions Consulting Group - Todos los derechos reservados</p>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <div>Generando PDF completo con gráficos...</div>
+        <div>Este proceso puede tardar unos segundos</div>
+    </div>
+
+    <script>
+        // Variables globales
+        let distribucionChartInstance = null;
+        let sexoChartInstance = null;
+        let sangreChartInstance = null;
+        let currentData = [];
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let filteredData = [];
+        
+        // Inicializar jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        // Esperar a que se cargue el DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('csv-file');
+            const statusMessage = document.getElementById('status-message');
+            const dashboardContent = document.getElementById('dashboard-content');
+            const searchInput = document.getElementById('search-input');
+            const itemsPerPageSelect = document.getElementById('items-per-page-select');
+            const prevPageButton = document.getElementById('prev-page');
+            const nextPageButton = document.getElementById('next-page');
+            const pageInfo = document.getElementById('page-info');
+            const downloadPdfButton = document.getElementById('download-pdf');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            
+            // Configurar el evento para cargar el archivo
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                statusMessage.textContent = 'Procesando archivo...';
+                statusMessage.className = 'status-message';
+                statusMessage.classList.remove('hidden');
+                
+                // Leer el archivo CSV
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function(results) {
+                        if (results.data.length === 0) {
+                            showError('El archivo está vacío o no tiene datos válidos');
+                            return;
+                        }
+                        
+                        // Procesar los datos
+                        currentData = results.data;
+                        filteredData = [...currentData];
+                        processData(currentData);
+                        statusMessage.textContent = `Datos cargados correctamente: ${currentData.length} registros procesados`;
+                        statusMessage.className = 'status-message success';
+                        dashboardContent.classList.remove('hidden');
+                        renderTable();
+                    },
+                    error: function(error) {
+                        showError('Error al procesar el archivo: ' + error.message);
+                    }
+                });
+            });
+            
+            // Configurar botón de descarga de PDF
+            downloadPdfButton.addEventListener('click', function() {
+                downloadPdfButton.disabled = true;
+                loadingOverlay.classList.remove('hidden');
+                
+                // Generar PDF después de un breve delay para que la animación de carga se muestre
+                setTimeout(() => {
+                    generatePDF();
+                    downloadPdfButton.disabled = false;
+                    loadingOverlay.classList.add('hidden');
+                }, 500);
+            });
+            
+            // Configurar búsqueda
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                if (searchTerm === '') {
+                    filteredData = [...currentData];
+                } else {
+                    filteredData = currentData.filter(item => {
+                        return (
+                            (item['Primer Nombre'] || '').toLowerCase().includes(searchTerm) ||
+                            (item['Primer Apellido'] || '').toLowerCase().includes(searchTerm) ||
+                            (item['Número de Documento'] || '').toLowerCase().includes(searchTerm) ||
+                            (item['Sexo'] || '').toLowerCase().includes(searchTerm)
+                        );
+                    });
+                }
+                currentPage = 1;
+                renderTable();
+            });
+            
+            // Configurar items por página
+            itemsPerPageSelect.addEventListener('change', function() {
+                itemsPerPage = parseInt(this.value);
+                currentPage = 1;
+                renderTable();
+            });
+            
+            // Configurar paginación
+            prevPageButton.addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderTable();
+                }
+            });
+            
+            nextPageButton.addEventListener('click', function() {
+                const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderTable();
+                }
+            });
+            
+            function showError(message) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status-message error';
+            }
+            
+            function processData(data) {
+                // Contadores para estadísticas
+                let total = data.length;
+                let sexos = {};
+                let tiposSangre = {};
+                let montoTotal = 4320000; // Monto fijo de $4,320,000
+                let montoIndividual = 90000; // Monto individual de $90,000
+                
+                // Procesar cada registro
+                data.forEach(row => {
+                    // Contar por sexo
+                    const sexo = row['Sexo'] || row['sexo'] || row['SEXO'] || 'No especificado';
+                    if (sexos[sexo]) {
+                        sexos[sexo]++;
+                    } else {
+                        sexos[sexo] = 1;
+                    }
+                    
+                    // Contar por tipo de sangre
+                    const sangre = row['Tipo de Sangre'] || row['Tipo Sangre'] || row['Sangre'] || 'No especificado';
+                    if (tiposSangre[sangre]) {
+                        tiposSangre[sangre]++;
+                    } else {
+                        tiposSangre[sangre] = 1;
+                    }
+                });
+                
+                // Actualizar estadísticas
+                document.getElementById('total-number').textContent = total;
+                document.getElementById('total-personas').textContent = total;
+                document.getElementById('monto-total').textContent = `$${montoTotal.toLocaleString()}`;
+                document.getElementById('monto-individual').textContent = `$${montoIndividual.toLocaleString()}`;
+                
+                // Preparar datos para gráficos
+                updateCharts(sexos, tiposSangre);
+            }
+            
+            function renderTable() {
+                const tableBody = document.querySelector('#data-table tbody');
+                tableBody.innerHTML = ''; // Limpiar tabla existente
+                
+                // Calcular índices para la paginación
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const pageData = filteredData.slice(startIndex, endIndex);
+                
+                // Monto individual fijo
+                const montoIndividual = 90000;
+                
+                // Llenar la tabla con los datos de la página actual
+                pageData.forEach(row => {
+                    const documento = row['Número de Documento'] || '';
+                    const primerApellido = row['Primer Apellido'] || '';
+                    const segundoApellido = row['Segundo Apellido'] || '';
+                    const primerNombre = row['Primer Nombre'] || '';
+                    const segundoNombre = row['Segundo Nombre'] || '';
+                    const nombreCompleto = `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`;
+                    const sexo = row['Sexo'] || '';
+                    const fechaNacimiento = row['Fecha de Nacimiento'] || '';
+                    const tipoSangre = row['Tipo de Sangre'] || '';
+                    
+                    // Agregar fila a la tabla
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${documento}</td>
+                        <td>${nombreCompleto}</td>
+                        <td>${sexo}</td>
+                        <td>${fechaNacimiento}</td>
+                        <td>${tipoSangre}</td>
+                        <td class="pagado">✅ Reembolso pagado</td>
+                        <td>$${montoIndividual.toLocaleString()}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+                
+                // Actualizar controles de paginación
+                const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+                pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+                
+                prevPageButton.disabled = currentPage === 1;
+                nextPageButton.disabled = currentPage === totalPages || totalPages === 0;
+            }
+            
+            function updateCharts(sexos, tiposSangre) {
+                // Destruir gráficos existentes si los hay
+                if (distribucionChartInstance) {
+                    distribucionChartInstance.destroy();
+                }
+                if (sexoChartInstance) {
+                    sexoChartInstance.destroy();
+                }
+                if (sangreChartInstance) {
+                    sangreChartInstance.destroy();
+                }
+                
+                // Gráfico de distribución por sexo
+                const ctx1 = document.getElementById('distribucionChart').getContext('2d');
+                const sexosLabels = Object.keys(sexos);
+                const sexosData = Object.values(sexos);
+                
+                distribucionChartInstance = new Chart(ctx1, {
+                    type: 'pie',
+                    data: {
+                        labels: sexosLabels,
+                        datasets: [{
+                            data: sexosData,
+                            backgroundColor: [
+                                '#36a2eb', '#ff6384', '#4bc0c0', '#ffce56',
+                                '#9966ff', '#ff9f40', '#c9cbcf'
+                            ],
+                            hoverBackgroundColor: [
+                                '#2980b9', '#e74c3c', '#3cb4a9', '#e6b91d',
+                                '#7d5fff', '#e67e22', '#b0b0b0'
+                            ],
+                            borderWidth: 0,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 14,
+                                        family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                                    },
+                                    padding: 20,
+                                    color: '#212529'
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw} personas (${Math.round(context.raw/currentData.length*100)}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Gráfico por sexo (barras)
+                const ctx2 = document.getElementById('sexoChart').getContext('2d');
+                
+                sexoChartInstance = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(sexos),
+                        datasets: [{
+                            label: 'Personas por sexo',
+                            data: Object.values(sexos),
+                            backgroundColor: [
+                                '#36a2eb', '#ff6384', '#4bc0c0'
+                            ],
+                            borderWidth: 0,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Gráfico por tipo de sangre
+                const ctx3 = document.getElementById('sangreChart').getContext('2d');
+                const sangreLabels = Object.keys(tiposSangre);
+                const sangreData = Object.values(tiposSangre);
+                
+                sangreChartInstance = new Chart(ctx3, {
+                    type: 'doughnut',
+                    data: {
+                        labels: sangreLabels,
+                        datasets: [{
+                            data: sangreData,
+                            backgroundColor: [
+                                '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0',
+                                '#9966ff', '#ff9f40', '#c9cbcf', '#2ecc71'
+                            ],
+                            borderWidth: 0,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 14,
+                                        family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                                    },
+                                    padding: 20,
+                                    color: '#212529'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function generatePDF() {
+                // Crear un nuevo documento PDF
+                const doc = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const margin = 15;
+                let currentY = margin;
+                
+                // Título del reporte
+                doc.setFontSize(20);
+                doc.setTextColor(40, 40, 40);
+                doc.text('Reporte de Reembolsos Pagados', pageWidth / 2, currentY, { align: 'center' });
+                currentY += 10;
+                
+                // Fecha de generación
+                doc.setFontSize(12);
+                doc.setTextColor(100, 100, 100);
+                const now = new Date();
+                const fecha = now.toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                doc.text(`Generado el: ${fecha}`, pageWidth / 2, currentY, { align: 'center' });
+                currentY += 20;
+                
+                // Información del monto
+                doc.setFontSize(14);
+                doc.setTextColor(40, 40, 40);
+                doc.text('Información de Reembolsos', margin, currentY);
+                currentY += 15;
+                
+                doc.setFontSize(12);
+                doc.setTextColor(80, 80, 80);
+                
+                doc.text(`Total de personas: 48`, margin, currentY);
+                currentY += 10;
+                doc.text(`Monto total distribuido: $4,320,000 pesos`, margin, currentY);
+                currentY += 10;
+                doc.text(`Monto individual: $90,000 pesos`, margin, currentY);
+                currentY += 10;
+                doc.text(`Estado: 100% Completado`, margin, currentY);
+                currentY += 20;
+                
+                // Capturar y agregar gráficos
+                const charts = [
+                    { id: 'distribucionChart', title: 'Distribución por Sexo' },
+                    { id: 'sexoChart', title: 'Distribución por Sexo (Barras)' },
+                    { id: 'sangreChart', title: 'Distribución por Tipo de Sangre' }
+                ];
+                
+                // Función para capturar y agregar gráficos al PDF
+                function addChartToPDF(index) {
+                    if (index >= charts.length) {
+                        // Todos los gráficos procesados, ahora agregar la tabla
+                        addTableToPDF();
+                        return;
+                    }
+                    
+                    const chart = charts[index];
+                    const chartElement = document.getElementById(chart.id);
+                    
+                    // Verificar si necesita una nueva página
+                    if (currentY > pageHeight - 100) {
+                        doc.addPage();
+                        currentY = margin;
+                    }
+                    
+                    html2canvas(chartElement, {
+                        scale: 2, // Mayor calidad
+                        logging: false,
+                        useCORS: true
+                    }).then(canvas => {
+                        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                        const imgWidth = pageWidth - (margin * 2);
+                        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                        
+                        // Agregar título del gráfico
+                        doc.setFontSize(14);
+                        doc.setTextColor(40, 40, 40);
+                        doc.text(chart.title, margin, currentY);
+                        currentY += 10;
+                        
+                        // Agregar imagen del gráfico
+                        doc.addImage(imgData, 'JPEG', margin, currentY, imgWidth, imgHeight);
+                        
+                        currentY += imgHeight + 20;
+                        
+                        // Procesar siguiente gráfico
+                        addChartToPDF(index + 1);
+                    }).catch(error => {
+                        console.error("Error capturando gráfico:", error);
+                        // Continuar con el siguiente gráfico incluso si hay error
+                        addChartToPDF(index + 1);
+                    });
+                }
+                
+                // Función para agregar la tabla al PDF
+                function addTableToPDF() {
+                    // Agregar nueva página para la tabla
+                    doc.addPage();
+                    currentY = margin;
+                    
+                    doc.setFontSize(14);
+                    doc.setTextColor(40, 40, 40);
+                    doc.text('Lista Completa de Personas con Reembolsos Pagados', margin, currentY);
+                    currentY += 15;
+                    
+                    // Crear tabla
+                    const tableColumn = ["Documento", "Nombre", "Sexo", "Fecha Nac.", "Tipo Sangre", "Monto"];
+                    const tableRows = [];
+                    
+                    // Monto individual fijo
+                    const montoIndividual = 90000;
+                    
+                    currentData.forEach(row => {
+                        const documento = row['Número de Documento'] || '';
+                        const primerApellido = row['Primer Apellido'] || '';
+                        const segundoApellido = row['Segundo Apellido'] || '';
+                        const primerNombre = row['Primer Nombre'] || '';
+                        const segundoNombre = row['Segundo Nombre'] || '';
+                        const nombreCompleto = `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`;
+                        const sexo = row['Sexo'] || '';
+                        const fechaNacimiento = row['Fecha de Nacimiento'] || '';
+                        const tipoSangre = row['Tipo de Sangre'] || '';
+                        
+                        const tableRow = [
+                            documento,
+                            doc.splitTextToSize(nombreCompleto, 50), // Ajustar texto largo
+                            sexo,
+                            fechaNacimiento,
+                            tipoSangre,
+                            `$${montoIndividual.toLocaleString()}`
+                        ];
+                        tableRows.push(tableRow);
+                    });
+                    
+                    // Generar la tabla
+                    doc.autoTable({
+                        head: [tableColumn],
+                        body: tableRows,
+                        startY: currentY,
+                        theme: 'grid',
+                        styles: { 
+                            fontSize: 8, 
+                            cellPadding: 2,
+                            overflow: 'linebreak'
+                        },
+                        headStyles: { 
+                            fillColor: [46, 204, 113],
+                            textColor: [255, 255, 255],
+                            fontStyle: 'bold'
+                        },
+                        alternateRowStyles: { 
+                            fillColor: [240, 240, 240] 
+                        },
+                        margin: { top: currentY },
+                        tableWidth: 'wrap'
+                    });
+                    
+                    // Guardar el PDF
+                    doc.save('reporte_completo_reembolsos.pdf');
+                }
+                
+                // Iniciar el proceso de captura de gráficos
+                addChartToPDF(0);
+            }
+        });
+    </script>
+</body>
+</html>
