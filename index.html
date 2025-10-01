@@ -15,26 +15,22 @@
             --dark: #212529;
             --gray: #6c757d;
         }
-        
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
         body {
             background-color: #f0f2f5;
             color: var(--dark);
             line-height: 1.6;
             padding: 20px;
         }
-        
         .container {
             max-width: 1400px;
             margin: 0 auto;
         }
-        
         header {
             text-align: center;
             margin-bottom: 30px;
@@ -44,17 +40,14 @@
             border-radius: 12px;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
         }
-        
         h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
         }
-        
         .subtitle {
             font-size: 1.2rem;
             opacity: 0.9;
         }
-        
         .highlight {
             background-color: #f9c74f;
             color: var(--dark);
@@ -62,7 +55,6 @@
             border-radius: 5px;
             font-weight: bold;
         }
-        
         .upload-section {
             background: white;
             border-radius: 12px;
@@ -71,7 +63,6 @@
             text-align: center;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
         }
-        
         .file-upload {
             display: flex;
             flex-direction: column;
@@ -79,11 +70,9 @@
             gap: 20px;
             margin: 20px 0;
         }
-        
         .file-input {
             display: none;
         }
-        
         .file-label {
             padding: 16px 32px;
             background: linear-gradient(to right, #3498db, #2980b9);
@@ -97,32 +86,27 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
             transition: all 0.3s ease;
         }
-        
         .file-label:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
-        
         .dashboard {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 25px;
             margin-bottom: 30px;
         }
-        
         @media (max-width: 968px) {
             .dashboard {
                 grid-template-columns: 1fr;
             }
         }
-        
         .card {
             background: white;
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
         }
-        
         .card-title {
             font-size: 1.4rem;
             margin-bottom: 20px;
@@ -130,14 +114,12 @@
             border-bottom: 2px solid var(--light);
             padding-bottom: 10px;
         }
-        
         .stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 25px;
         }
-        
         .stat-card {
             background: #f8f9fa;
             border-radius: 10px;
@@ -145,26 +127,22 @@
             text-align: center;
             border-left: 5px solid var(--primary);
         }
-        
         .stat-number {
             font-size: 2.2rem;
             font-weight: bold;
             color: var(--primary);
             margin-bottom: 5px;
         }
-        
         .stat-label {
             color: var(--gray);
             font-size: 1rem;
         }
-        
         .chart-container {
             position: relative;
             height: 320px;
             width: 100%;
             margin: 15px 0;
         }
-        
         .table-container {
             overflow-x: auto;
             border-radius: 10px;
@@ -173,20 +151,17 @@
             max-height: 500px;
             overflow-y: auto;
         }
-        
         table {
             width: 100%;
             border-collapse: collapse;
             min-width: 1000px;
         }
-        
         th, td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #e0e0e0;
             font-size: 0.9rem;
         }
-        
         th {
             background-color: var(--primary);
             color: white;
@@ -194,15 +169,12 @@
             top: 0;
             font-weight: 600;
         }
-        
         tr:nth-child(even) {
             background-color: #f8f9fa;
         }
-        
         tr:hover {
             background-color: #e9ecef;
         }
-        
         .pagado {
             color: #27ae60;
             font-weight: bold;
@@ -210,7 +182,6 @@
             align-items: center;
             gap: 5px;
         }
-        
         .no-pagado {
             color: #e74c3c;
             font-weight: bold;
@@ -218,14 +189,12 @@
             align-items: center;
             gap: 5px;
         }
-        
         .footer {
             text-align: center;
             margin-top: 50px;
             color: var(--gray);
             font-size: 0.95rem;
         }
-        
         .instructions {
             background: white;
             border-radius: 12px;
@@ -233,21 +202,17 @@
             margin-top: 30px;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
         }
-        
         .instructions h3 {
             color: var(--primary);
             margin-bottom: 15px;
         }
-        
         .instructions ol {
             padding-left: 25px;
             line-height: 1.8;
         }
-        
         .instructions li {
             margin-bottom: 10px;
         }
-        
         .status-message {
             margin-top: 15px;
             padding: 12px;
@@ -255,28 +220,23 @@
             text-align: center;
             font-weight: 500;
         }
-        
         .success {
             background-color: #d4edda;
             color: #155724;
         }
-        
         .error {
             background-color: #f8d7da;
             color: #721c24;
         }
-        
         .hidden {
             display: none;
         }
-        
         .table-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
-        
         .search-box {
             padding: 10px 15px;
             border: 1px solid #ddd;
@@ -284,19 +244,16 @@
             width: 250px;
             font-size: 0.9rem;
         }
-        
         .items-per-page {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
         .items-per-page select {
             padding: 8px;
             border-radius: 5px;
             border: 1px solid #ddd;
         }
-        
         .pagination {
             display: flex;
             justify-content: center;
@@ -304,7 +261,6 @@
             gap: 15px;
             margin-top: 20px;
         }
-        
         .pagination button {
             padding: 10px 20px;
             background-color: var(--primary);
@@ -314,23 +270,19 @@
             cursor: pointer;
             transition: background 0.3s;
         }
-        
         .pagination button:hover {
             background: #219653;
         }
-        
         .pagination button:disabled {
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        
         .export-buttons {
             display: flex;
             justify-content: center;
             gap: 15px;
             margin: 20px 0;
         }
-        
         .btn {
             padding: 12px 24px;
             border: none;
@@ -343,17 +295,14 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
         }
-        
         .btn-download {
             background: linear-gradient(to right, #27ae60, #219653);
             color: white;
         }
-        
         .btn-download:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
-        
         .amount-display {
             background: linear-gradient(135deg, #2ecc71, #27ae60);
             color: white;
@@ -364,7 +313,6 @@
             font-size: 1.5rem;
             font-weight: bold;
         }
-        
         .progress-bar {
             height: 15px;
             background-color: #e9ecef;
@@ -372,14 +320,12 @@
             overflow: hidden;
             margin: 20px 0;
         }
-        
         .progress {
             height: 100%;
             background: linear-gradient(to right, #2ecc71, #27ae60);
             border-radius: 10px;
             transition: width 0.5s ease;
         }
-        
         .debug-info {
             background: #f8f9fa;
             border-radius: 8px;
@@ -390,7 +336,6 @@
             max-height: 200px;
             overflow-y: auto;
         }
-
         .config-section {
             background: white;
             border-radius: 12px;
@@ -398,33 +343,28 @@
             margin: 20px 0;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
-
         .config-input {
             display: flex;
             gap: 15px;
             align-items: center;
             margin: 10px 0;
         }
-
         .config-input label {
             font-weight: bold;
             min-width: 200px;
         }
-
         .config-input input {
             padding: 8px 12px;
             border: 1px solid #ddd;
             border-radius: 5px;
             width: 150px;
         }
-
         .filters {
             display: flex;
             gap: 15px;
             margin: 15px 0;
             flex-wrap: wrap;
         }
-
         .filter-btn {
             padding: 8px 16px;
             border: 1px solid #ddd;
@@ -433,7 +373,6 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-
         .filter-btn.active {
             background: var(--primary);
             color: white;
@@ -447,7 +386,6 @@
             <h1>Dashboard de Reembolsos Pagados</h1>
             <p class="subtitle">Sistema inteligente de visualización de reembolsos</p>
         </header>
-        
         <div class="upload-section">
             <h2>Cargar datos desde Google Sheets</h2>
             <div class="file-upload">
@@ -460,7 +398,6 @@
             <div id="status-message" class="status-message hidden"></div>
             <div id="debug-info" class="debug-info hidden"></div>
         </div>
-
         <div id="config-section" class="config-section hidden">
             <h3>Configuración del Presupuesto</h3>
             <div class="config-input">
@@ -473,7 +410,6 @@
             </div>
             <button class="btn" onclick="actualizarCalculos()">Actualizar Cálculos</button>
         </div>
-        
         <div id="dashboard-content" class="hidden">
             <div class="amount-display">
                 <div>Presupuesto total: <span id="presupuesto-display" class="highlight">$3,420,000 pesos</span></div>
@@ -483,26 +419,22 @@
                 <div>Monto total distribuido: <span id="monto-total-distribuido" class="highlight">$1,350,000 pesos</span></div>
                 <div>Presupuesto restante: <span id="presupuesto-restante" class="highlight">$2,070,000 pesos</span></div>
             </div>
-            
             <div class="progress-bar">
                 <div id="progress-bar-inner" class="progress" style="width: 39.5%"></div>
             </div>
             <div style="text-align: center; margin: 10px 0; font-weight: bold;">
                 <span id="porcentaje-completado">39.5%</span> completado
             </div>
-
             <div class="filters">
                 <button class="filter-btn active" onclick="filtrarTabla('todos')">Todos (66)</button>
                 <button class="filter-btn" onclick="filtrarTabla('pagados')">Pagados (<span id="count-pagados">15</span>)</button>
                 <button class="filter-btn" onclick="filtrarTabla('no-pagados')">No Pagados (<span id="count-no-pagados">51</span>)</button>
             </div>
-            
             <div class="export-buttons">
                 <button class="btn btn-download" id="download-pdf" onclick="alert('Función de PDF disponible después de cargar datos')">
                     <span>📥 Descargar Reporte PDF Completo</span>
                 </button>
             </div>
-            
             <div class="dashboard">
                 <div class="card">
                     <h2 class="card-title">Resumen de Reembolsos</h2>
@@ -524,28 +456,27 @@
                             <div class="stat-label">Completado</div>
                         </div>
                     </div>
-                    
                     <div class="chart-container">
                         <canvas id="estadoPagosChart"></canvas>
                     </div>
                 </div>
-                
                 <div class="card">
                     <h2 class="card-title">Distribución por Sexo (Pagados)</h2>
                     <div class="chart-container">
                         <canvas id="sexoChart"></canvas>
                     </div>
-                    
                     <h2 class="card-title">Distribución por Municipio</h2>
                     <div class="chart-container">
                         <canvas id="municipioChart"></canvas>
                     </div>
+                    <h2 class="card-title">Distribución por Institución Educativa (Pagados)</h2>
+                    <div class="chart-container">
+                        <canvas id="institucionChart"></canvas>
+                    </div>
                 </div>
             </div>
-            
             <div class="card">
                 <h2 class="card-title">Registros de Reembolsos</h2>
-                
                 <div class="table-controls">
                     <input type="text" id="search-input" class="search-box" placeholder="Buscar...">
                     <div class="items-per-page">
@@ -559,7 +490,6 @@
                         <span>registros</span>
                     </div>
                 </div>
-                
                 <div class="table-container">
                     <table id="data-table">
                         <thead>
@@ -572,7 +502,6 @@
                         </tbody>
                     </table>
                 </div>
-                
                 <div class="pagination">
                     <button id="prev-page" disabled>Anterior</button>
                     <span id="page-info">Página 1 de 1</span>
@@ -580,7 +509,6 @@
                 </div>
             </div>
         </div>
-        
         <div class="instructions">
             <h3>¿Cómo usar este dashboard?</h3>
             <ol>
@@ -591,17 +519,16 @@
                 <li>Usa los filtros para ver solo pagados, no pagados, o todos los registros</li>
             </ol>
         </div>
-        
         <div class="footer">
             <p>Sistema de Control de Reembolsos © 2025 - Innovaris Marketing Solutions Consulting Group - Todos los derechos reservados</p>
         </div>
     </div>
-
     <script>
         // Variables globales
         let distribucionChartInstance = null;
         let sexoChartInstance = null;
         let municipioChartInstance = null;
+        let institucionChartInstance = null; // ← NUEVA
         let estadoPagosChartInstance = null;
         let currentData = [];
         let currentPage = 1;
@@ -609,11 +536,9 @@
         let filteredData = [];
         let detectedHeaders = {};
         let currentFilter = 'todos';
-        
         // Configuración de presupuesto
         let presupuestoTotal = 3420000;
         let montoIndividual = 90000;
-
         // Mapeo inteligente de encabezados
         const headerMapping = {
             'documento': ['número de documento', 'documento', 'identificación', 'cedula', 'cedula', 'dni', 'id', 'no. de identificación', '#'],
@@ -630,7 +555,6 @@
             'reembolso_pagado': ['reembolsos pagados', 'pago', 'pagado', 'monto pagado', 'reembolso']
         };
 
-        // Esperar a que se cargue el DOM
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('csv-file');
             const statusMessage = document.getElementById('status-message');
@@ -642,21 +566,17 @@
             const prevPageButton = document.getElementById('prev-page');
             const nextPageButton = document.getElementById('next-page');
             const pageInfo = document.getElementById('page-info');
-            
-            // Configurar inputs de presupuesto
+
             document.getElementById('presupuesto-total').value = presupuestoTotal;
             document.getElementById('monto-individual').value = montoIndividual;
 
-            // Configurar el evento para cargar el archivo
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (!file) return;
-                
                 statusMessage.textContent = 'Procesando archivo...';
                 statusMessage.className = 'status-message';
                 statusMessage.classList.remove('hidden');
-                
-                // Leer el archivo CSV
+
                 Papa.parse(file, {
                     header: true,
                     skipEmptyLines: true,
@@ -665,33 +585,23 @@
                             showError('El archivo está vacío o no tiene datos válidos');
                             return;
                         }
-                        
-                        // Mostrar información de depuración
                         debugInfo.innerHTML = `<strong>Encabezados detectados:</strong><br>${JSON.stringify(results.meta.fields, null, 2)}`;
                         debugInfo.classList.remove('hidden');
-                        
-                        // Detectar y mapear encabezados automáticamente
+
                         detectHeaders(results.meta.fields);
-                        
-                        // Procesar los datos con los encabezados detectados
+
                         currentData = results.data.filter(row => {
-                            // Filtrar filas vacías
                             return Object.values(row).some(value => value && value.toString().trim() !== '');
                         });
-                        
-                        // Identificar quiénes recibieron reembolso
+
                         currentData.forEach(row => {
                             row.pagado = esPagado(row);
                         });
-                        
                         filteredData = [...currentData];
-                        
-                        // Mostrar sección de configuración y dashboard
+
                         configSection.classList.remove('hidden');
                         dashboardContent.classList.remove('hidden');
-                        
                         processData(currentData);
-                        
                         statusMessage.textContent = `Datos cargados correctamente: ${currentData.length} registros procesados. ${contarPagados()} personas recibieron reembolso.`;
                         statusMessage.className = 'status-message success';
                         renderTable();
@@ -701,8 +611,7 @@
                     }
                 });
             });
-            
-            // Configurar búsqueda
+
             searchInput.addEventListener('input', function() {
                 const searchTerm = this.value.toLowerCase();
                 if (searchTerm === '') {
@@ -711,8 +620,6 @@
                     filteredData = currentData.filter(item => {
                         if (currentFilter === 'pagados' && !item.pagado) return false;
                         if (currentFilter === 'no-pagados' && item.pagado) return false;
-                        
-                        // Búsqueda en todos los campos detectados
                         return Object.values(detectedHeaders).some(header => {
                             const value = item[header.original] || '';
                             return value.toString().toLowerCase().includes(searchTerm);
@@ -722,22 +629,20 @@
                 currentPage = 1;
                 renderTable();
             });
-            
-            // Configurar items por página
+
             itemsPerPageSelect.addEventListener('change', function() {
                 itemsPerPage = parseInt(this.value);
                 currentPage = 1;
                 renderTable();
             });
-            
-            // Configurar paginación
+
             prevPageButton.addEventListener('click', function() {
                 if (currentPage > 1) {
                     currentPage--;
                     renderTable();
                 }
             });
-            
+
             nextPageButton.addEventListener('click', function() {
                 const totalPages = Math.ceil(filteredData.length / itemsPerPage);
                 if (currentPage < totalPages) {
@@ -745,33 +650,29 @@
                     renderTable();
                 }
             });
-            
+
             function esPagado(row) {
                 const reembolsoHeader = detectedHeaders.reembolso_pagado ? detectedHeaders.reembolso_pagado.original : null;
                 if (!reembolsoHeader) return false;
-                
                 const valorReembolso = row[reembolsoHeader] || '';
                 return valorReembolso.toString().includes('90000') || 
                        valorReembolso.toString().includes('90,000') || 
-                       valorReembolso.toString().includes('90000');
+                       valorReembolso.toString().includes('$90.000');
             }
-            
+
             function contarPagados() {
                 return currentData.filter(row => row.pagado).length;
             }
-            
+
             function contarNoPagados() {
                 return currentData.filter(row => !row.pagado).length;
             }
-            
+
             function detectHeaders(headers) {
                 detectedHeaders = {};
-                
                 headers.forEach(header => {
                     const headerLower = header.toLowerCase().trim();
                     let mapped = false;
-                    
-                    // Buscar coincidencias en el mapeo
                     for (const [key, patterns] of Object.entries(headerMapping)) {
                         for (const pattern of patterns) {
                             if (headerLower.includes(pattern)) {
@@ -785,8 +686,6 @@
                         }
                         if (mapped) break;
                     }
-                    
-                    // Si no se mapeó, usar el header original
                     if (!mapped) {
                         detectedHeaders[header] = {
                             original: header,
@@ -794,132 +693,99 @@
                         };
                     }
                 });
-                
                 console.log('Encabezados detectados:', detectedHeaders);
             }
-            
+
             function formatHeaderName(header) {
                 return header.split(' ')
                     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
                     .join(' ');
             }
-            
+
             function showError(message) {
                 statusMessage.textContent = message;
                 statusMessage.className = 'status-message error';
             }
-            
+
             function processData(data) {
-                // Contadores para estadísticas
                 let totalPersonasLista = data.length;
                 let personasPagadas = contarPagados();
                 let personasNoPagadas = contarNoPagados();
-                
                 let sexosPagados = {};
                 let municipiosPagados = {};
-                
-                // Calcular montos reales basados en los datos PAGADOS
+                let institucionesPagadas = {}; // ← NUEVA
+
                 let montoTotalDistribuido = personasPagadas * montoIndividual;
                 let presupuestoRestante = presupuestoTotal - montoTotalDistribuido;
                 let porcentajeCompletado = (montoTotalDistribuido / presupuestoTotal) * 100;
-                
-                // Procesar solo las personas PAGADAS para los gráficos
+
                 data.filter(row => row.pagado).forEach(row => {
-                    // Contar por sexo (usando el header detectado)
                     const sexoHeader = detectedHeaders.sexo ? detectedHeaders.sexo.original : null;
                     const sexo = sexoHeader ? (row[sexoHeader] || 'No especificado') : 'No detectado';
-                    
-                    if (sexosPagados[sexo]) {
-                        sexosPagados[sexo]++;
-                    } else {
-                        sexosPagados[sexo] = 1;
-                    }
-                    
-                    // Contar por municipio (usando el header detectado)
+                    sexosPagados[sexo] = (sexosPagados[sexo] || 0) + 1;
+
                     const municipioHeader = detectedHeaders.lugar ? detectedHeaders.lugar.original : null;
                     const municipio = municipioHeader ? (row[municipioHeader] || 'No especificado') : 'No detectado';
-                    
-                    if (municipiosPagados[municipio]) {
-                        municipiosPagados[municipio]++;
-                    } else {
-                        municipiosPagados[municipio] = 1;
-                    }
+                    municipiosPagados[municipio] = (municipiosPagados[municipio] || 0) + 1;
+
+                    // ← NUEVA: Contar por institución
+                    const institucionHeader = detectedHeaders.institucion ? detectedHeaders.institucion.original : null;
+                    const institucion = institucionHeader ? (row[institucionHeader] || 'No especificada') : 'No detectada';
+                    institucionesPagadas[institucion] = (institucionesPagadas[institucion] || 0) + 1;
                 });
-                
-                // Actualizar estadísticas en la interfaz
+
                 actualizarInterfaz(totalPersonasLista, personasPagadas, personasNoPagadas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado);
-                
-                // Preparar datos para gráficos
-                updateCharts(sexosPagados, municipiosPagados, personasPagadas, personasNoPagadas);
+                updateCharts(sexosPagados, municipiosPagados, institucionesPagadas, personasPagadas, personasNoPagadas); // ← PASAMOS EL NUEVO OBJETO
             }
-            
+
             function actualizarInterfaz(totalLista, pagadas, noPagadas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado) {
-                // Actualizar displays principales
                 document.getElementById('total-personas-lista').textContent = totalLista;
                 document.getElementById('total-personas-pagadas').textContent = pagadas;
                 document.getElementById('monto-total-distribuido').textContent = `$${montoTotalDistribuido.toLocaleString()} pesos`;
                 document.getElementById('presupuesto-restante').textContent = `$${presupuestoRestante.toLocaleString()} pesos`;
                 document.getElementById('porcentaje-completado').textContent = `${porcentajeCompletado.toFixed(1)}%`;
-                
-                // Actualizar contadores de filtros
                 document.getElementById('count-pagados').textContent = pagadas;
                 document.getElementById('count-no-pagados').textContent = noPagadas;
-                
-                // Actualizar barra de progreso
                 document.getElementById('progress-bar-inner').style.width = `${porcentajeCompletado}%`;
-                
-                // Actualizar estadísticas
                 document.getElementById('total-number').textContent = pagadas;
                 document.getElementById('monto-total').textContent = `$${montoTotalDistribuido.toLocaleString()}`;
                 document.getElementById('monto-individual-stat').textContent = `$${montoIndividual.toLocaleString()}`;
                 document.getElementById('completado-number').textContent = `${porcentajeCompletado.toFixed(1)}%`;
-                
-                // Actualizar displays de configuración
                 document.getElementById('presupuesto-display').textContent = `$${presupuestoTotal.toLocaleString()} pesos`;
                 document.getElementById('monto-individual-display').textContent = `$${montoIndividual.toLocaleString()} pesos`;
             }
-            
+
             function renderTable() {
                 const tableHead = document.querySelector('#table-headers');
                 const tableBody = document.querySelector('#data-table tbody');
-                
-                // Limpiar tabla
                 tableHead.innerHTML = '';
                 tableBody.innerHTML = '';
-                
-                // Generar encabezados de tabla
+
                 Object.values(detectedHeaders).forEach(headerInfo => {
                     const th = document.createElement('th');
                     th.textContent = headerInfo.display;
                     tableHead.appendChild(th);
                 });
-                
-                // Agregar columnas fijas
+
                 const thEstado = document.createElement('th');
                 thEstado.textContent = 'Estado';
                 tableHead.appendChild(thEstado);
-                
                 const thMonto = document.createElement('th');
                 thMonto.textContent = 'Monto';
                 tableHead.appendChild(thMonto);
-                
-                // Calcular índices para la paginación
+
                 const startIndex = (currentPage - 1) * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
                 const pageData = filteredData.slice(startIndex, endIndex);
-                
-                // Llenar la tabla con los datos de la página actual
+
                 pageData.forEach(row => {
                     const tr = document.createElement('tr');
-                    
-                    // Agregar celdas para cada header detectado
                     Object.values(detectedHeaders).forEach(headerInfo => {
                         const td = document.createElement('td');
                         td.textContent = row[headerInfo.original] || '';
                         tr.appendChild(td);
                     });
-                    
-                    // Agregar estado de reembolso
+
                     const tdEstado = document.createElement('td');
                     if (row.pagado) {
                         tdEstado.className = 'pagado';
@@ -929,8 +795,7 @@
                         tdEstado.innerHTML = '❌ Pendiente de pago';
                     }
                     tr.appendChild(tdEstado);
-                    
-                    // Agregar monto
+
                     const tdMonto = document.createElement('td');
                     if (row.pagado) {
                         tdMonto.textContent = `$${montoIndividual.toLocaleString()}`;
@@ -941,165 +806,24 @@
                         tdMonto.style.color = '#e74c3c';
                     }
                     tr.appendChild(tdMonto);
-                    
                     tableBody.appendChild(tr);
                 });
-                
-                // Actualizar controles de paginación
+
                 const totalPages = Math.ceil(filteredData.length / itemsPerPage);
                 pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
-                
                 prevPageButton.disabled = currentPage === 1;
                 nextPageButton.disabled = currentPage === totalPages || totalPages === 0;
             }
-            
-            function updateCharts(sexosPagados, municipiosPagados, personasPagadas, personasNoPagadas) {
-                // Destruir gráficos existentes si los hay
+
+            function updateCharts(sexosPagados, municipiosPagados, institucionesPagadas, personasPagadas, personasNoPagadas) {
                 if (estadoPagosChartInstance) estadoPagosChartInstance.destroy();
                 if (sexoChartInstance) sexoChartInstance.destroy();
                 if (municipioChartInstance) municipioChartInstance.destroy();
-                
-                // Gráfico de estado de pagos
+                if (institucionChartInstance) institucionChartInstance.destroy(); // ← NUEVA
+
+                // Gráfico estado de pagos
                 const ctx1 = document.getElementById('estadoPagosChart').getContext('2d');
                 estadoPagosChartInstance = new Chart(ctx1, {
                     type: 'doughnut',
-                    data: {
-                        labels: ['Pagados', 'No Pagados'],
-                        datasets: [{
-                            data: [personasPagadas, personasNoPagadas],
-                            backgroundColor: ['#2ecc71', '#e74c3c'],
-                            hoverBackgroundColor: ['#27ae60', '#c0392b'],
-                            borderWidth: 0,
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: {
-                                        size: 14,
-                                        family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-                                    },
-                                    padding: 20,
-                                    color: '#212529'
-                                }
-                            }
-                        }
-                    }
-                });
-                
-                // Gráfico por sexo (solo pagados)
-                const ctx2 = document.getElementById('sexoChart').getContext('2d');
-                sexoChartInstance = new Chart(ctx2, {
-                    type: 'bar',
-                    data: {
-                        labels: Object.keys(sexosPagados),
-                        datasets: [{
-                            label: 'Personas pagadas por sexo',
-                            data: Object.values(sexosPagados),
-                            backgroundColor: ['#36a2eb', '#ff6384', '#4bc0c0'],
-                            borderWidth: 0,
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
-                                }
-                            }
-                        }
-                    }
-                });
-                
-                // Gráfico por municipio (solo pagados)
-                const ctx3 = document.getElementById('municipioChart').getContext('2d');
-                municipioChartInstance = new Chart(ctx3, {
-                    type: 'pie',
-                    data: {
-                        labels: Object.keys(municipiosPagados),
-                        datasets: [{
-                            data: Object.values(municipiosPagados),
-                            backgroundColor: [
-                                '#36a2eb', '#ff6384', '#4bc0c0', '#ffce56',
-                                '#9966ff', '#ff9f40', '#c9cbcf', '#2ecc71',
-                                '#9b59b6', '#1abc9c', '#34495e', '#f39c12'
-                            ],
-                            borderWidth: 0,
-                            borderRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: {
-                                        size: 12,
-                                        family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-                                    },
-                                    padding: 15,
-                                    color: '#212529'
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-        });
-
-        // Función para actualizar cálculos cuando cambia la configuración
-        function actualizarCalculos() {
-            presupuestoTotal = parseInt(document.getElementById('presupuesto-total').value) || 3420000;
-            montoIndividual = parseInt(document.getElementById('monto-individual').value) || 90000;
-            
-            if (currentData.length > 0) {
-                processData(currentData);
-            }
-        }
-
-        // Función para filtrar la tabla
-        function filtrarTabla(filtro) {
-            currentFilter = filtro;
-            
-            // Actualizar botones activos
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            aplicarFiltro(filtro);
-            currentPage = 1;
-            renderTable();
-        }
-
-        function aplicarFiltro(filtro) {
-            switch(filtro) {
-                case 'pagados':
-                    filteredData = currentData.filter(row => row.pagado);
-                    break;
-                case 'no-pagados':
-                    filteredData = currentData.filter(row => !row.pagado);
-                    break;
-                default:
-                    filteredData = [...currentData];
-            }
-        }
-    </script>
-</body>
-</html>
+                     {
+                        labels: [
