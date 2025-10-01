@@ -582,6 +582,9 @@
             const loadingText = document.getElementById('loading-text');
             const loadingSubtext = document.getElementById('loading-subtext');
             
+            // Inicialmente deshabilitar el botón de descarga
+            downloadPdfButton.disabled = true;
+            
             // Configurar el evento para cargar el archivo
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
@@ -608,6 +611,10 @@
                         statusMessage.textContent = `Datos cargados correctamente: ${currentData.length} registros procesados`;
                         statusMessage.className = 'status-message success';
                         dashboardContent.classList.remove('hidden');
+                        
+                        // Habilitar el botón de descarga solo después de cargar datos
+                        downloadPdfButton.disabled = false;
+                        
                         renderTable();
                     },
                     error: function(error) {
@@ -618,6 +625,10 @@
             
             // Configurar botón de descarga de PDF
             downloadPdfButton.addEventListener('click', function() {
+                if (currentData.length === 0) {
+                    alert('Por favor, primero carga un archivo CSV con datos.');
+                    return;
+                }
                 downloadPdf();
             });
             
