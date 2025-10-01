@@ -6,8 +6,6 @@
     <title>Dashboard de Reembolsos</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary: #2ecc71;
@@ -123,11 +121,6 @@
             border-radius: 12px;
             padding: 25px;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
         }
         
         .card-title {
@@ -378,44 +371,13 @@
             border-radius: 10px;
             width: 100%;
         }
-        
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            color: white;
-            font-size: 1.5rem;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .spinner {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Dashboard de Reembolsos Pagados</h1>
-            <p class="subtitle">Sistema de visualización de reembolsos por valor de <span class="highlight">$4,320,000 pesos</span></p>
+            <p class="subtitle">Sistema de visualización de reembolsos por valor de <span class="highlight">$3,420,000 pesos</span></p>
         </header>
         
         <div class="upload-section">
@@ -432,7 +394,7 @@
         
         <div id="dashboard-content" class="hidden">
             <div class="amount-display">
-                <div>Monto total distribuido: <span class="highlight">$4,320,000 pesos</span></div>
+                <div>Monto total distribuido: <span class="highlight">$3,420,000 pesos</span></div>
                 <div>Monto individual: <span class="highlight">$90,000 pesos</span> por persona</div>
                 <div>Total de personas beneficiadas: <span id="total-personas" class="highlight">48</span></div>
             </div>
@@ -442,7 +404,7 @@
             </div>
             
             <div class="export-buttons">
-                <button class="btn btn-download" id="download-pdf">
+                <button class="btn btn-download" id="download-pdf" onclick="alert('Función de PDF deshabilitada temporalmente. Primero carga un archivo CSV para ver los datos.')">
                     <span>📥 Descargar Reporte PDF Completo</span>
                 </button>
             </div>
@@ -456,7 +418,7 @@
                             <div class="stat-label">Total Personas</div>
                         </div>
                         <div class="stat-card">
-                            <div id="monto-total" class="stat-number">$4,320,000</div>
+                            <div id="monto-total" class="stat-number">$3,420,000</div>
                             <div class="stat-label">Monto Total</div>
                         </div>
                         <div class="stat-card">
@@ -538,7 +500,6 @@
                 <li>Exporta los datos: Ve a <strong>Archivo → Descargar → Valores separados por comas (.csv)</strong></li>
                 <li>Haz clic en "Seleccionar archivo CSV" arriba y elige el archivo que descargaste</li>
                 <li>Los gráficos y estadísticas se generarán automáticamente con tus datos reales</li>
-                <li>Haz clic en "Descargar Reporte PDF Completo" para obtener un reporte con gráficos y lista de personas</li>
                 <li>Puedes buscar y paginar los resultados en la tabla</li>
             </ol>
         </div>
@@ -546,12 +507,6 @@
         <div class="footer">
             <p>Sistema de Control de Reembolsos © 2025 - Innovaris Marketing Solutions Consulting Group - Todos los derechos reservados</p>
         </div>
-    </div>
-
-    <div id="loading-overlay" class="loading-overlay hidden">
-        <div class="spinner"></div>
-        <div id="loading-text">Generando PDF completo con gráficos...</div>
-        <div id="loading-subtext">Este proceso puede tardar unos segundos</div>
     </div>
 
     <script>
@@ -564,9 +519,6 @@
         let itemsPerPage = 10;
         let filteredData = [];
         
-        // Inicializar jsPDF
-        const { jsPDF } = window.jspdf;
-        
         // Esperar a que se cargue el DOM
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('csv-file');
@@ -577,13 +529,6 @@
             const prevPageButton = document.getElementById('prev-page');
             const nextPageButton = document.getElementById('next-page');
             const pageInfo = document.getElementById('page-info');
-            const downloadPdfButton = document.getElementById('download-pdf');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const loadingText = document.getElementById('loading-text');
-            const loadingSubtext = document.getElementById('loading-subtext');
-            
-            // Inicialmente deshabilitar el botón de descarga
-            downloadPdfButton.disabled = true;
             
             // Configurar el evento para cargar el archivo
             fileInput.addEventListener('change', function(e) {
@@ -611,25 +556,12 @@
                         statusMessage.textContent = `Datos cargados correctamente: ${currentData.length} registros procesados`;
                         statusMessage.className = 'status-message success';
                         dashboardContent.classList.remove('hidden');
-                        
-                        // Habilitar el botón de descarga solo después de cargar datos
-                        downloadPdfButton.disabled = false;
-                        
                         renderTable();
                     },
                     error: function(error) {
                         showError('Error al procesar el archivo: ' + error.message);
                     }
                 });
-            });
-            
-            // Configurar botón de descarga de PDF
-            downloadPdfButton.addEventListener('click', function() {
-                if (currentData.length === 0) {
-                    alert('Por favor, primero carga un archivo CSV con datos.');
-                    return;
-                }
-                downloadPdf();
             });
             
             // Configurar búsqueda
@@ -684,7 +616,7 @@
                 let total = data.length;
                 let sexos = {};
                 let tiposSangre = {};
-                let montoTotal = 4320000; // Monto fijo de $4,320,000
+                let montoTotal = 4320000; // Monto fijo de $3,420,000
                 let montoIndividual = 90000; // Monto individual de $90,000
                 
                 // Procesar cada registro
@@ -894,249 +826,6 @@
                                 }
                             }
                         }
-                    }
-                });
-            }
-            
-            function downloadPdf() {
-                downloadPdfButton.disabled = true;
-                loadingOverlay.classList.remove('hidden');
-                loadingText.textContent = "Preparando datos para el PDF...";
-                
-                // Usar una promesa para manejar mejor el proceso
-                generatePDF()
-                    .then(() => {
-                        loadingOverlay.classList.add('hidden');
-                        downloadPdfButton.disabled = false;
-                    })
-                    .catch((error) => {
-                        console.error("Error generando PDF:", error);
-                        loadingText.textContent = "Error generando PDF";
-                        loadingSubtext.textContent = "Intente de nuevo";
-                        setTimeout(() => {
-                            loadingOverlay.classList.add('hidden');
-                            downloadPdfButton.disabled = false;
-                            alert("Hubo un error al generar el PDF. Por favor, intente de nuevo.");
-                        }, 2000);
-                    });
-            }
-            
-            async function generatePDF() {
-                return new Promise(async (resolve, reject) => {
-                    try {
-                        // Crear un nuevo documento PDF
-                        const doc = new jsPDF('p', 'mm', 'a4');
-                        const pageWidth = doc.internal.pageSize.getWidth();
-                        const pageHeight = doc.internal.pageSize.getHeight();
-                        const margin = 15;
-                        let currentY = margin;
-                        
-                        // Título del reporte
-                        doc.setFontSize(20);
-                        doc.setTextColor(40, 40, 40);
-                        doc.text('Reporte de Reembolsos Pagados', pageWidth / 2, currentY, { align: 'center' });
-                        currentY += 10;
-                        
-                        // Fecha de generación
-                        doc.setFontSize(12);
-                        doc.setTextColor(100, 100, 100);
-                        const now = new Date();
-                        const fecha = now.toLocaleDateString('es-ES', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
-                        doc.text(`Generado el: ${fecha}`, pageWidth / 2, currentY, { align: 'center' });
-                        currentY += 20;
-                        
-                        // Información del monto
-                        doc.setFontSize(14);
-                        doc.setTextColor(40, 40, 40);
-                        doc.text('Información de Reembolsos', margin, currentY);
-                        currentY += 15;
-                        
-                        doc.setFontSize(12);
-                        doc.setTextColor(80, 80, 80);
-                        
-                        doc.text(`Total de personas: ${currentData.length}`, margin, currentY);
-                        currentY += 10;
-                        doc.text(`Monto total distribuido: $4,320,000 pesos`, margin, currentY);
-                        currentY += 10;
-                        doc.text(`Monto individual: $90,000 pesos`, margin, currentY);
-                        currentY += 10;
-                        doc.text(`Estado: 100% Completado`, margin, currentY);
-                        currentY += 20;
-                        
-                        // Capturar y agregar gráficos uno por uno
-                        loadingText.textContent = "Capturando gráfico de distribución...";
-                        
-                        // Gráfico 1: Distribución por sexo (pie)
-                        try {
-                            const chart1Canvas = await html2canvas(document.getElementById('distribucionChart'), {
-                                scale: 1.5,
-                                logging: false,
-                                useCORS: true,
-                                allowTaint: true
-                            });
-                            
-                            if (currentY > pageHeight - 100) {
-                                doc.addPage();
-                                currentY = margin;
-                            }
-                            
-                            doc.setFontSize(14);
-                            doc.setTextColor(40, 40, 40);
-                            doc.text('Distribución por Sexo', margin, currentY);
-                            currentY += 10;
-                            
-                            const imgData1 = chart1Canvas.toDataURL('image/jpeg', 0.8);
-                            const imgWidth1 = pageWidth - (margin * 2);
-                            const imgHeight1 = (chart1Canvas.height * imgWidth1) / chart1Canvas.width;
-                            
-                            doc.addImage(imgData1, 'JPEG', margin, currentY, imgWidth1, imgHeight1);
-                            currentY += imgHeight1 + 20;
-                        } catch (error) {
-                            console.error("Error capturando gráfico 1:", error);
-                            doc.text('Error capturando gráfico de distribución', margin, currentY);
-                            currentY += 20;
-                        }
-                        
-                        loadingText.textContent = "Capturando gráfico de sexo...";
-                        
-                        // Gráfico 2: Distribución por sexo (barras)
-                        try {
-                            const chart2Canvas = await html2canvas(document.getElementById('sexoChart'), {
-                                scale: 1.5,
-                                logging: false,
-                                useCORS: true,
-                                allowTaint: true
-                            });
-                            
-                            if (currentY > pageHeight - 100) {
-                                doc.addPage();
-                                currentY = margin;
-                            }
-                            
-                            doc.setFontSize(14);
-                            doc.setTextColor(40, 40, 40);
-                            doc.text('Distribución por Sexo (Barras)', margin, currentY);
-                            currentY += 10;
-                            
-                            const imgData2 = chart2Canvas.toDataURL('image/jpeg', 0.8);
-                            const imgWidth2 = pageWidth - (margin * 2);
-                            const imgHeight2 = (chart2Canvas.height * imgWidth2) / chart2Canvas.width;
-                            
-                            doc.addImage(imgData2, 'JPEG', margin, currentY, imgWidth2, imgHeight2);
-                            currentY += imgHeight2 + 20;
-                        } catch (error) {
-                            console.error("Error capturando gráfico 2:", error);
-                            doc.text('Error capturando gráfico de sexo', margin, currentY);
-                            currentY += 20;
-                        }
-                        
-                        loadingText.textContent = "Capturando gráfico de tipos de sangre...";
-                        
-                        // Gráfico 3: Distribución por tipo de sangre
-                        try {
-                            const chart3Canvas = await html2canvas(document.getElementById('sangreChart'), {
-                                scale: 1.5,
-                                logging: false,
-                                useCORS: true,
-                                allowTaint: true
-                            });
-                            
-                            if (currentY > pageHeight - 100) {
-                                doc.addPage();
-                                currentY = margin;
-                            }
-                            
-                            doc.setFontSize(14);
-                            doc.setTextColor(40, 40, 40);
-                            doc.text('Distribución por Tipo de Sangre', margin, currentY);
-                            currentY += 10;
-                            
-                            const imgData3 = chart3Canvas.toDataURL('image/jpeg', 0.8);
-                            const imgWidth3 = pageWidth - (margin * 2);
-                            const imgHeight3 = (chart3Canvas.height * imgWidth3) / chart3Canvas.width;
-                            
-                            doc.addImage(imgData3, 'JPEG', margin, currentY, imgWidth3, imgHeight3);
-                            currentY += imgHeight3 + 20;
-                        } catch (error) {
-                            console.error("Error capturando gráfico 3:", error);
-                            doc.text('Error capturando gráfico de tipos de sangre', margin, currentY);
-                            currentY += 20;
-                        }
-                        
-                        loadingText.textContent = "Generando tabla de datos...";
-                        
-                        // Agregar nueva página para la tabla
-                        doc.addPage();
-                        currentY = margin;
-                        
-                        doc.setFontSize(14);
-                        doc.setTextColor(40, 40, 40);
-                        doc.text('Lista Completa de Personas con Reembolsos Pagados', margin, currentY);
-                        currentY += 15;
-                        
-                        // Crear tabla
-                        const tableColumn = ["Documento", "Nombre", "Sexo", "Fecha Nac.", "Tipo Sangre", "Monto"];
-                        const tableRows = [];
-                        
-                        // Monto individual fijo
-                        const montoIndividual = 90000;
-                        
-                        currentData.forEach(row => {
-                            const documento = row['Número de Documento'] || '';
-                            const primerApellido = row['Primer Apellido'] || '';
-                            const segundoApellido = row['Segundo Apellido'] || '';
-                            const primerNombre = row['Primer Nombre'] || '';
-                            const segundoNombre = row['Segundo Nombre'] || '';
-                            const nombreCompleto = `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`;
-                            const sexo = row['Sexo'] || '';
-                            const fechaNacimiento = row['Fecha de Nacimiento'] || '';
-                            const tipoSangre = row['Tipo de Sangre'] || '';
-                            
-                            const tableRow = [
-                                documento,
-                                nombreCompleto,
-                                sexo,
-                                fechaNacimiento,
-                                tipoSangre,
-                                `$${montoIndividual.toLocaleString()}`
-                            ];
-                            tableRows.push(tableRow);
-                        });
-                        
-                        // Generar la tabla
-                        doc.autoTable({
-                            head: [tableColumn],
-                            body: tableRows,
-                            startY: currentY,
-                            theme: 'grid',
-                            styles: { 
-                                fontSize: 8, 
-                                cellPadding: 2,
-                                overflow: 'linebreak'
-                            },
-                            headStyles: { 
-                                fillColor: [46, 204, 113],
-                                textColor: [255, 255, 255],
-                                fontStyle: 'bold'
-                            },
-                            alternateRowStyles: { 
-                                fillColor: [240, 240, 240] 
-                            },
-                            margin: { top: currentY }
-                        });
-                        
-                        // Guardar el PDF
-                        doc.save('reporte_completo_reembolsos.pdf');
-                        resolve();
-                    } catch (error) {
-                        reject(error);
                     }
                 });
             }
