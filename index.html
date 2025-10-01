@@ -528,7 +528,7 @@
         let distribucionChartInstance = null;
         let sexoChartInstance = null;
         let municipioChartInstance = null;
-        let institucionChartInstance = null; // ← NUEVA
+        let institucionChartInstance = null;
         let estadoPagosChartInstance = null;
         let currentData = [];
         let currentPage = 1;
@@ -651,13 +651,15 @@
                 }
             });
 
+            // ✅ FUNCIÓN CORREGIDA: detecta correctamente " $90.000"
             function esPagado(row) {
                 const reembolsoHeader = detectedHeaders.reembolso_pagado ? detectedHeaders.reembolso_pagado.original : null;
                 if (!reembolsoHeader) return false;
-                const valorReembolso = row[reembolsoHeader] || '';
-                return valorReembolso.toString().includes('90000') || 
-                       valorReembolso.toString().includes('90,000') || 
-                       valorReembolso.toString().includes('$90.000');
+                let valor = (row[reembolsoHeader] || '').toString().trim();
+                if (valor === '') return false;
+                // Eliminar $, espacios, puntos y comas → dejar solo dígitos
+                valor = valor.replace(/[$\s.,]/g, '');
+                return valor === '90000';
             }
 
             function contarPagados() {
@@ -713,7 +715,7 @@
                 let personasNoPagadas = contarNoPagados();
                 let sexosPagados = {};
                 let municipiosPagados = {};
-                let institucionesPagadas = {}; // ← NUEVA
+                let institucionesPagadas = {};
 
                 let montoTotalDistribuido = personasPagadas * montoIndividual;
                 let presupuestoRestante = presupuestoTotal - montoTotalDistribuido;
@@ -728,14 +730,14 @@
                     const municipio = municipioHeader ? (row[municipioHeader] || 'No especificado') : 'No detectado';
                     municipiosPagados[municipio] = (municipiosPagados[municipio] || 0) + 1;
 
-                    // ← NUEVA: Contar por institución
+                    // ← NUEVO: Contar por institución
                     const institucionHeader = detectedHeaders.institucion ? detectedHeaders.institucion.original : null;
                     const institucion = institucionHeader ? (row[institucionHeader] || 'No especificada') : 'No detectada';
                     institucionesPagadas[institucion] = (institucionesPagadas[institucion] || 0) + 1;
                 });
 
                 actualizarInterfaz(totalPersonasLista, personasPagadas, personasNoPagadas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado);
-                updateCharts(sexosPagados, municipiosPagados, institucionesPagadas, personasPagadas, personasNoPagadas); // ← PASAMOS EL NUEVO OBJETO
+                updateCharts(sexosPagados, municipiosPagados, institucionesPagadas, personasPagadas, personasNoPagadas);
             }
 
             function actualizarInterfaz(totalLista, pagadas, noPagadas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado) {
@@ -819,11 +821,165 @@
                 if (estadoPagosChartInstance) estadoPagosChartInstance.destroy();
                 if (sexoChartInstance) sexoChartInstance.destroy();
                 if (municipioChartInstance) municipioChartInstance.destroy();
-                if (institucionChartInstance) institucionChartInstance.destroy(); // ← NUEVA
+                if (institucionChartInstance) institucionChartInstance.destroy();
 
                 // Gráfico estado de pagos
                 const ctx1 = document.getElementById('estadoPagosChart').getContext('2d');
                 estadoPagosChartInstance = new Chart(ctx1, {
                     type: 'doughnut',
-                     {
-                        labels: [
+                    data: {
+                        labels: ['Pagados', 'No Pagados'],
+                        datasets: [{
+                            data: [personasPagadas, personasNoPagadas],
+                            backgroundColor: ['#2ecc71', '#e74c3c'],
+                            hoverBackgroundColor: ['#27ae60', '#c0392b'],
+                            borderWidth: 0,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 14 }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Gráfico por sexo
+                const ctx2 = document.getElementById('sexoChart').getContext('2d');
+                sexoChartInstance = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(sexosPagados),
+                        datasets: [{
+                            label: 'Personas pagadas por sexo',
+                            data: Object.values(sexosPagados),
+                            backgroundColor: ['#36a2eb', '#ff6384', '#4bc0c0'],
+                            borderWidth: 0,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { precision: 0 } }
+                        }
+                    }
+                });
+
+                // Gráfico por municipio
+                const ctx3 = document.getElementById('municipioChart').getContext('2d');
+                municipioChartInstance = new Chart(ctx3, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(municipiosPagados),
+                        datasets: [{
+                            data: Object.values(municipiosPagados),
+                            backgroundColor: [
+                                '#36a2eb', '#ff6384', '#4bc0c0', '#ffce56',
+                                '#9966ff', '#ff9f40', '#c9cbcf', '#2ecc71',
+                                '#9b59b6', '#1abc9c', '#34495e', '#f39c12'
+                            ],
+                            borderWidth: 0,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { font: { size: 12 } }
+                            }
+                        }
+                    }
+                });
+
+                // ← NUEVO: Gráfico por institución (barras horizontales)
+                const ctx4 = document.getElementById('institucionChart').getContext('2d');
+                institucionChartInstance = new Chart(ctx4, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(institucionesPagadas),
+                        datasets: [{
+                            label: 'Reembolsos pagados por institución',
+                            data: Object.values(institucionesPagadas),
+                            backgroundColor: '#9b59b6',
+                            borderWidth: 0,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.parsed.x} reembolso(s)`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { precision: 0 }
+                            },
+                            y: {
+                                ticks: {
+                                    autoSkip: false,
+                                    font: { size: 10 }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        function actualizarCalculos() {
+            presupuestoTotal = parseInt(document.getElementById('presupuesto-total').value) || 3420000;
+            montoIndividual = parseInt(document.getElementById('monto-individual').value) || 90000;
+            if (currentData.length > 0) {
+                processData(currentData);
+            }
+        }
+
+        function filtrarTabla(filtro) {
+            currentFilter = filtro;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            aplicarFiltro(filtro);
+            currentPage = 1;
+            renderTable();
+        }
+
+        function aplicarFiltro(filtro) {
+            switch(filtro) {
+                case 'pagados':
+                    filteredData = currentData.filter(row => row.pagado);
+                    break;
+                case 'no-pagados':
+                    filteredData = currentData.filter(row => !row.pagado);
+                    break;
+                default:
+                    filteredData = [...currentData];
+            }
+        }
+    </script>
+</body>
+</html>
