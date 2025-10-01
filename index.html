@@ -371,13 +371,24 @@
             border-radius: 10px;
             width: 100%;
         }
+        
+        .debug-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Dashboard de Reembolsos Pagados</h1>
-            <p class="subtitle">Sistema de visualización de reembolsos por valor de <span class="highlight">$3,420,000 pesos</span></p>
+            <p class="subtitle">Sistema de visualización de reembolsos por valor de <span class="highlight">$4,320,000 pesos</span></p>
         </header>
         
         <div class="upload-section">
@@ -390,11 +401,12 @@
                 <p>Exporta tu Google Sheets como CSV (Archivo → Descargar → CSV)</p>
             </div>
             <div id="status-message" class="status-message hidden"></div>
+            <div id="debug-info" class="debug-info hidden"></div>
         </div>
         
         <div id="dashboard-content" class="hidden">
             <div class="amount-display">
-                <div>Monto total distribuido: <span class="highlight">$3,420,000 pesos</span></div>
+                <div>Monto total distribuido: <span class="highlight">$4,320,000 pesos</span></div>
                 <div>Monto individual: <span class="highlight">$90,000 pesos</span> por persona</div>
                 <div>Total de personas beneficiadas: <span id="total-personas" class="highlight">48</span></div>
             </div>
@@ -404,7 +416,7 @@
             </div>
             
             <div class="export-buttons">
-                <button class="btn btn-download" id="download-pdf" onclick="alert('Función de PDF deshabilitada temporalmente. Primero carga un archivo CSV para ver los datos.')">
+                <button class="btn btn-download" id="download-pdf" onclick="alert('Función de PDF disponible después de cargar datos')">
                     <span>📥 Descargar Reporte PDF Completo</span>
                 </button>
             </div>
@@ -418,7 +430,7 @@
                             <div class="stat-label">Total Personas</div>
                         </div>
                         <div class="stat-card">
-                            <div id="monto-total" class="stat-number">$3,420,000</div>
+                            <div id="monto-total" class="stat-number">$4,320,000</div>
                             <div class="stat-label">Monto Total</div>
                         </div>
                         <div class="stat-card">
@@ -469,14 +481,8 @@
                 <div class="table-container">
                     <table id="data-table">
                         <thead>
-                            <tr>
-                                <th>Documento</th>
-                                <th>Nombre Completo</th>
-                                <th>Sexo</th>
-                                <th>Fecha Nacimiento</th>
-                                <th>Tipo Sangre</th>
-                                <th>Estado</th>
-                                <th>Monto</th>
+                            <tr id="table-headers">
+                                <!-- Los encabezados se generarán automáticamente -->
                             </tr>
                         </thead>
                         <tbody>
@@ -496,7 +502,8 @@
         <div class="instructions">
             <h3>¿Cómo usar este dashboard?</h3>
             <ol>
-                <li>Completa tu registro de reembolsos en Google Sheets con las columnas: Documento, Apellidos, Nombres, Sexo, Fecha de Nacimiento, Tipo de Sangre</li>
+                <li><strong>Sube cualquier archivo CSV</strong> - El sistema detectará automáticamente los encabezados</li>
+                <li>No importa el nombre de las columnas, el sistema identificará: nombres, documento, sexo, etc.</li>
                 <li>Exporta los datos: Ve a <strong>Archivo → Descargar → Valores separados por comas (.csv)</strong></li>
                 <li>Haz clic en "Seleccionar archivo CSV" arriba y elige el archivo que descargaste</li>
                 <li>Los gráficos y estadísticas se generarán automáticamente con tus datos reales</li>
@@ -518,11 +525,49 @@
         let currentPage = 1;
         let itemsPerPage = 10;
         let filteredData = [];
+        let detectedHeaders = {};
         
+        // Mapeo inteligente de encabezados
+        const headerMapping = {
+            // Documento/Identificación
+            'documento': ['número de documento', 'documento', 'identificación', 'cedula', 'cedula', 'dni', 'id', 'no. de identificación', '#'],
+            
+            // Nombres
+            'nombres': ['nombre', 'nombres', 'primer nombre', 'nombre completo', 'nombres y apellidos completos'],
+            
+            // Apellidos
+            'apellidos': ['apellido', 'apellidos', 'primer apellido', 'segundo apellido'],
+            
+            // Sexo/Género
+            'sexo': ['sexo', 'género', 'genero', 'sexo (m/f)', 'género (m/f)'],
+            
+            // Fecha de Nacimiento
+            'fecha_nacimiento': ['fecha de nacimiento', 'nacimiento', 'fecha nacimiento', 'fechanac'],
+            
+            // Tipo de Sangre
+            'tipo_sangre': ['tipo de sangre', 'sangre', 'grupo sanguineo', 'rh', 'tipo sanguíneo'],
+            
+            // Institución
+            'institucion': ['institución', 'institucion', 'empresa', 'organización'],
+            
+            // Cargo/Rol
+            'cargo': ['cargo', 'rol', 'cargo/rol', 'puesto', 'ocupación'],
+            
+            // Teléfono
+            'telefono': ['teléfono', 'telefono', 'celular', 'móvil', 'teléfono móvil'],
+            
+            // Email
+            'email': ['correo', 'email', 'correo electrónico', 'e-mail'],
+            
+            // Lugar
+            'lugar': ['lugar', 'origen', 'lugar origen', 'ciudad', 'departamento']
+        };
+
         // Esperar a que se cargue el DOM
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('csv-file');
             const statusMessage = document.getElementById('status-message');
+            const debugInfo = document.getElementById('debug-info');
             const dashboardContent = document.getElementById('dashboard-content');
             const searchInput = document.getElementById('search-input');
             const itemsPerPageSelect = document.getElementById('items-per-page-select');
@@ -549,11 +594,19 @@
                             return;
                         }
                         
-                        // Procesar los datos
+                        // Mostrar información de depuración
+                        debugInfo.innerHTML = `<strong>Encabezados detectados:</strong><br>${JSON.stringify(results.meta.fields, null, 2)}`;
+                        debugInfo.classList.remove('hidden');
+                        
+                        // Detectar y mapear encabezados automáticamente
+                        detectHeaders(results.meta.fields);
+                        
+                        // Procesar los datos con los encabezados detectados
                         currentData = results.data;
                         filteredData = [...currentData];
                         processData(currentData);
-                        statusMessage.textContent = `Datos cargados correctamente: ${currentData.length} registros procesados`;
+                        
+                        statusMessage.textContent = `Datos cargados correctamente: ${currentData.length} registros procesados. Encabezados detectados automáticamente.`;
                         statusMessage.className = 'status-message success';
                         dashboardContent.classList.remove('hidden');
                         renderTable();
@@ -571,12 +624,11 @@
                     filteredData = [...currentData];
                 } else {
                     filteredData = currentData.filter(item => {
-                        return (
-                            (item['Primer Nombre'] || '').toLowerCase().includes(searchTerm) ||
-                            (item['Primer Apellido'] || '').toLowerCase().includes(searchTerm) ||
-                            (item['Número de Documento'] || '').toLowerCase().includes(searchTerm) ||
-                            (item['Sexo'] || '').toLowerCase().includes(searchTerm)
-                        );
+                        // Búsqueda en todos los campos detectados
+                        return Object.values(detectedHeaders).some(header => {
+                            const value = item[header.original] || '';
+                            return value.toString().toLowerCase().includes(searchTerm);
+                        });
                     });
                 }
                 currentPage = 1;
@@ -606,6 +658,46 @@
                 }
             });
             
+            function detectHeaders(headers) {
+                detectedHeaders = {};
+                
+                headers.forEach(header => {
+                    const headerLower = header.toLowerCase().trim();
+                    let mapped = false;
+                    
+                    // Buscar coincidencias en el mapeo
+                    for (const [key, patterns] of Object.entries(headerMapping)) {
+                        for (const pattern of patterns) {
+                            if (headerLower.includes(pattern)) {
+                                detectedHeaders[key] = {
+                                    original: header,
+                                    display: formatHeaderName(header)
+                                };
+                                mapped = true;
+                                break;
+                            }
+                        }
+                        if (mapped) break;
+                    }
+                    
+                    // Si no se mapeó, usar el header original
+                    if (!mapped) {
+                        detectedHeaders[header] = {
+                            original: header,
+                            display: formatHeaderName(header)
+                        };
+                    }
+                });
+                
+                console.log('Encabezados detectados:', detectedHeaders);
+            }
+            
+            function formatHeaderName(header) {
+                return header.split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ');
+            }
+            
             function showError(message) {
                 statusMessage.textContent = message;
                 statusMessage.className = 'status-message error';
@@ -616,21 +708,25 @@
                 let total = data.length;
                 let sexos = {};
                 let tiposSangre = {};
-                let montoTotal = 4320000; // Monto fijo de $3,420,000
-                let montoIndividual = 90000; // Monto individual de $90,000
+                let montoTotal = 4320000;
+                let montoIndividual = 90000;
                 
                 // Procesar cada registro
                 data.forEach(row => {
-                    // Contar por sexo
-                    const sexo = row['Sexo'] || row['sexo'] || row['SEXO'] || 'No especificado';
+                    // Contar por sexo (usando el header detectado)
+                    const sexoHeader = detectedHeaders.sexo ? detectedHeaders.sexo.original : null;
+                    const sexo = sexoHeader ? (row[sexoHeader] || 'No especificado') : 'No detectado';
+                    
                     if (sexos[sexo]) {
                         sexos[sexo]++;
                     } else {
                         sexos[sexo] = 1;
                     }
                     
-                    // Contar por tipo de sangre
-                    const sangre = row['Tipo de Sangre'] || row['Tipo Sangre'] || row['Sangre'] || 'No especificado';
+                    // Contar por tipo de sangre (usando el header detectado)
+                    const sangreHeader = detectedHeaders.tipo_sangre ? detectedHeaders.tipo_sangre.original : null;
+                    const sangre = sangreHeader ? (row[sangreHeader] || 'No especificado') : 'No detectado';
+                    
                     if (tiposSangre[sangre]) {
                         tiposSangre[sangre]++;
                     } else {
@@ -649,8 +745,28 @@
             }
             
             function renderTable() {
+                const tableHead = document.querySelector('#table-headers');
                 const tableBody = document.querySelector('#data-table tbody');
-                tableBody.innerHTML = ''; // Limpiar tabla existente
+                
+                // Limpiar tabla
+                tableHead.innerHTML = '';
+                tableBody.innerHTML = '';
+                
+                // Generar encabezados de tabla
+                Object.values(detectedHeaders).forEach(headerInfo => {
+                    const th = document.createElement('th');
+                    th.textContent = headerInfo.display;
+                    tableHead.appendChild(th);
+                });
+                
+                // Agregar columnas fijas
+                const thEstado = document.createElement('th');
+                thEstado.textContent = 'Estado';
+                tableHead.appendChild(thEstado);
+                
+                const thMonto = document.createElement('th');
+                thMonto.textContent = 'Monto';
+                tableHead.appendChild(thMonto);
                 
                 // Calcular índices para la paginación
                 const startIndex = (currentPage - 1) * itemsPerPage;
@@ -662,27 +778,26 @@
                 
                 // Llenar la tabla con los datos de la página actual
                 pageData.forEach(row => {
-                    const documento = row['Número de Documento'] || '';
-                    const primerApellido = row['Primer Apellido'] || '';
-                    const segundoApellido = row['Segundo Apellido'] || '';
-                    const primerNombre = row['Primer Nombre'] || '';
-                    const segundoNombre = row['Segundo Nombre'] || '';
-                    const nombreCompleto = `${primerNombre} ${segundoNombre} ${primerApellido} ${segundoApellido}`;
-                    const sexo = row['Sexo'] || '';
-                    const fechaNacimiento = row['Fecha de Nacimiento'] || '';
-                    const tipoSangre = row['Tipo de Sangre'] || '';
-                    
-                    // Agregar fila a la tabla
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${documento}</td>
-                        <td>${nombreCompleto}</td>
-                        <td>${sexo}</td>
-                        <td>${fechaNacimiento}</td>
-                        <td>${tipoSangre}</td>
-                        <td class="pagado">✅ Reembolso pagado</td>
-                        <td>$${montoIndividual.toLocaleString()}</td>
-                    `;
+                    
+                    // Agregar celdas para cada header detectado
+                    Object.values(detectedHeaders).forEach(headerInfo => {
+                        const td = document.createElement('td');
+                        td.textContent = row[headerInfo.original] || '';
+                        tr.appendChild(td);
+                    });
+                    
+                    // Agregar estado de reembolso
+                    const tdEstado = document.createElement('td');
+                    tdEstado.className = 'pagado';
+                    tdEstado.innerHTML = '✅ Reembolso pagado';
+                    tr.appendChild(tdEstado);
+                    
+                    // Agregar monto
+                    const tdMonto = document.createElement('td');
+                    tdMonto.textContent = `$${montoIndividual.toLocaleString()}`;
+                    tr.appendChild(tdMonto);
+                    
                     tableBody.appendChild(tr);
                 });
                 
