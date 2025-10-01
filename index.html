@@ -211,6 +211,14 @@
             gap: 5px;
         }
         
+        .no-pagado {
+            color: #e74c3c;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
         .footer {
             text-align: center;
             margin-top: 50px;
@@ -409,6 +417,28 @@
             border-radius: 5px;
             width: 150px;
         }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -448,7 +478,8 @@
             <div class="amount-display">
                 <div>Presupuesto total: <span id="presupuesto-display" class="highlight">$3,420,000 pesos</span></div>
                 <div>Monto individual: <span id="monto-individual-display" class="highlight">$90,000 pesos</span> por persona</div>
-                <div>Total de personas beneficiadas: <span id="total-personas" class="highlight">15</span></div>
+                <div>Total de personas en lista: <span id="total-personas-lista" class="highlight">66</span></div>
+                <div><strong>Personas con reembolso pagado: <span id="total-personas-pagadas" class="highlight">15</span></strong></div>
                 <div>Monto total distribuido: <span id="monto-total-distribuido" class="highlight">$1,350,000 pesos</span></div>
                 <div>Presupuesto restante: <span id="presupuesto-restante" class="highlight">$2,070,000 pesos</span></div>
             </div>
@@ -458,6 +489,12 @@
             </div>
             <div style="text-align: center; margin: 10px 0; font-weight: bold;">
                 <span id="porcentaje-completado">39.5%</span> completado
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" onclick="filtrarTabla('todos')">Todos (66)</button>
+                <button class="filter-btn" onclick="filtrarTabla('pagados')">Pagados (<span id="count-pagados">15</span>)</button>
+                <button class="filter-btn" onclick="filtrarTabla('no-pagados')">No Pagados (<span id="count-no-pagados">51</span>)</button>
             </div>
             
             <div class="export-buttons">
@@ -472,7 +509,7 @@
                     <div class="stats">
                         <div class="stat-card">
                             <div id="total-number" class="stat-number">15</div>
-                            <div class="stat-label">Total Personas</div>
+                            <div class="stat-label">Personas Pagadas</div>
                         </div>
                         <div class="stat-card">
                             <div id="monto-total" class="stat-number">$1,350,000</div>
@@ -489,25 +526,25 @@
                     </div>
                     
                     <div class="chart-container">
-                        <canvas id="distribucionChart"></canvas>
+                        <canvas id="estadoPagosChart"></canvas>
                     </div>
                 </div>
                 
                 <div class="card">
-                    <h2 class="card-title">Distribución por Sexo</h2>
+                    <h2 class="card-title">Distribución por Sexo (Pagados)</h2>
                     <div class="chart-container">
                         <canvas id="sexoChart"></canvas>
                     </div>
                     
-                    <h2 class="card-title">Distribución por Tipo de Sangre</h2>
+                    <h2 class="card-title">Distribución por Municipio</h2>
                     <div class="chart-container">
-                        <canvas id="sangreChart"></canvas>
+                        <canvas id="municipioChart"></canvas>
                     </div>
                 </div>
             </div>
             
             <div class="card">
-                <h2 class="card-title">Registros de Reembolsos Pagados</h2>
+                <h2 class="card-title">Registros de Reembolsos</h2>
                 
                 <div class="table-controls">
                     <input type="text" id="search-input" class="search-box" placeholder="Buscar...">
@@ -549,9 +586,9 @@
             <ol>
                 <li><strong>Sube cualquier archivo CSV</strong> - El sistema detectará automáticamente los encabezados</li>
                 <li><strong>Configura el presupuesto</strong> - Ajusta el monto total y el monto individual según tus datos reales</li>
-                <li>Los cálculos se actualizarán automáticamente basados en el número real de personas en tu archivo</li>
-                <li>Exporta los datos: Ve a <strong>Archivo → Descargar → Valores separados por comas (.csv)</strong></li>
-                <li>Los gráficos y estadísticas se generarán automáticamente con tus datos reales</li>
+                <li><strong>El sistema identifica automáticamente</strong> quiénes recibieron el reembolso (columna REEMBOLSOS PAGADOS)</li>
+                <li>Los cálculos se actualizarán automáticamente basados en las personas que realmente recibieron el pago</li>
+                <li>Usa los filtros para ver solo pagados, no pagados, o todos los registros</li>
             </ol>
         </div>
         
@@ -564,12 +601,14 @@
         // Variables globales
         let distribucionChartInstance = null;
         let sexoChartInstance = null;
-        let sangreChartInstance = null;
+        let municipioChartInstance = null;
+        let estadoPagosChartInstance = null;
         let currentData = [];
         let currentPage = 1;
         let itemsPerPage = 10;
         let filteredData = [];
         let detectedHeaders = {};
+        let currentFilter = 'todos';
         
         // Configuración de presupuesto
         let presupuestoTotal = 3420000;
@@ -587,7 +626,8 @@
             'cargo': ['cargo', 'rol', 'cargo/rol', 'puesto', 'ocupación'],
             'telefono': ['teléfono', 'telefono', 'celular', 'móvil', 'teléfono móvil'],
             'email': ['correo', 'email', 'correo electrónico', 'e-mail'],
-            'lugar': ['lugar', 'origen', 'lugar origen', 'ciudad', 'departamento']
+            'lugar': ['lugar', 'origen', 'lugar origen', 'ciudad', 'departamento', 'municipio'],
+            'reembolso_pagado': ['reembolsos pagados', 'pago', 'pagado', 'monto pagado', 'reembolso']
         };
 
         // Esperar a que se cargue el DOM
@@ -639,6 +679,11 @@
                             return Object.values(row).some(value => value && value.toString().trim() !== '');
                         });
                         
+                        // Identificar quiénes recibieron reembolso
+                        currentData.forEach(row => {
+                            row.pagado = esPagado(row);
+                        });
+                        
                         filteredData = [...currentData];
                         
                         // Mostrar sección de configuración y dashboard
@@ -647,7 +692,7 @@
                         
                         processData(currentData);
                         
-                        statusMessage.textContent = `Datos cargados correctamente: ${currentData.length} registros procesados. Encabezados detectados automáticamente.`;
+                        statusMessage.textContent = `Datos cargados correctamente: ${currentData.length} registros procesados. ${contarPagados()} personas recibieron reembolso.`;
                         statusMessage.className = 'status-message success';
                         renderTable();
                     },
@@ -661,9 +706,12 @@
             searchInput.addEventListener('input', function() {
                 const searchTerm = this.value.toLowerCase();
                 if (searchTerm === '') {
-                    filteredData = [...currentData];
+                    aplicarFiltro(currentFilter);
                 } else {
                     filteredData = currentData.filter(item => {
+                        if (currentFilter === 'pagados' && !item.pagado) return false;
+                        if (currentFilter === 'no-pagados' && item.pagado) return false;
+                        
                         // Búsqueda en todos los campos detectados
                         return Object.values(detectedHeaders).some(header => {
                             const value = item[header.original] || '';
@@ -697,6 +745,24 @@
                     renderTable();
                 }
             });
+            
+            function esPagado(row) {
+                const reembolsoHeader = detectedHeaders.reembolso_pagado ? detectedHeaders.reembolso_pagado.original : null;
+                if (!reembolsoHeader) return false;
+                
+                const valorReembolso = row[reembolsoHeader] || '';
+                return valorReembolso.toString().includes('90000') || 
+                       valorReembolso.toString().includes('90,000') || 
+                       valorReembolso.toString().includes('90000');
+            }
+            
+            function contarPagados() {
+                return currentData.filter(row => row.pagado).length;
+            }
+            
+            function contarNoPagados() {
+                return currentData.filter(row => !row.pagado).length;
+            }
             
             function detectHeaders(headers) {
                 detectedHeaders = {};
@@ -745,57 +811,65 @@
             
             function processData(data) {
                 // Contadores para estadísticas
-                let totalPersonas = data.length;
-                let sexos = {};
-                let tiposSangre = {};
+                let totalPersonasLista = data.length;
+                let personasPagadas = contarPagados();
+                let personasNoPagadas = contarNoPagados();
                 
-                // Calcular montos reales basados en los datos
-                let montoTotalDistribuido = totalPersonas * montoIndividual;
+                let sexosPagados = {};
+                let municipiosPagados = {};
+                
+                // Calcular montos reales basados en los datos PAGADOS
+                let montoTotalDistribuido = personasPagadas * montoIndividual;
                 let presupuestoRestante = presupuestoTotal - montoTotalDistribuido;
                 let porcentajeCompletado = (montoTotalDistribuido / presupuestoTotal) * 100;
                 
-                // Procesar cada registro
-                data.forEach(row => {
+                // Procesar solo las personas PAGADAS para los gráficos
+                data.filter(row => row.pagado).forEach(row => {
                     // Contar por sexo (usando el header detectado)
                     const sexoHeader = detectedHeaders.sexo ? detectedHeaders.sexo.original : null;
                     const sexo = sexoHeader ? (row[sexoHeader] || 'No especificado') : 'No detectado';
                     
-                    if (sexos[sexo]) {
-                        sexos[sexo]++;
+                    if (sexosPagados[sexo]) {
+                        sexosPagados[sexo]++;
                     } else {
-                        sexos[sexo] = 1;
+                        sexosPagados[sexo] = 1;
                     }
                     
-                    // Contar por tipo de sangre (usando el header detectado)
-                    const sangreHeader = detectedHeaders.tipo_sangre ? detectedHeaders.tipo_sangre.original : null;
-                    const sangre = sangreHeader ? (row[sangreHeader] || 'No especificado') : 'No detectado';
+                    // Contar por municipio (usando el header detectado)
+                    const municipioHeader = detectedHeaders.lugar ? detectedHeaders.lugar.original : null;
+                    const municipio = municipioHeader ? (row[municipioHeader] || 'No especificado') : 'No detectado';
                     
-                    if (tiposSangre[sangre]) {
-                        tiposSangre[sangre]++;
+                    if (municipiosPagados[municipio]) {
+                        municipiosPagados[municipio]++;
                     } else {
-                        tiposSangre[sangre] = 1;
+                        municipiosPagados[municipio] = 1;
                     }
                 });
                 
                 // Actualizar estadísticas en la interfaz
-                actualizarInterfaz(totalPersonas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado);
+                actualizarInterfaz(totalPersonasLista, personasPagadas, personasNoPagadas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado);
                 
                 // Preparar datos para gráficos
-                updateCharts(sexos, tiposSangre);
+                updateCharts(sexosPagados, municipiosPagados, personasPagadas, personasNoPagadas);
             }
             
-            function actualizarInterfaz(totalPersonas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado) {
+            function actualizarInterfaz(totalLista, pagadas, noPagadas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado) {
                 // Actualizar displays principales
-                document.getElementById('total-personas').textContent = totalPersonas;
+                document.getElementById('total-personas-lista').textContent = totalLista;
+                document.getElementById('total-personas-pagadas').textContent = pagadas;
                 document.getElementById('monto-total-distribuido').textContent = `$${montoTotalDistribuido.toLocaleString()} pesos`;
                 document.getElementById('presupuesto-restante').textContent = `$${presupuestoRestante.toLocaleString()} pesos`;
                 document.getElementById('porcentaje-completado').textContent = `${porcentajeCompletado.toFixed(1)}%`;
+                
+                // Actualizar contadores de filtros
+                document.getElementById('count-pagados').textContent = pagadas;
+                document.getElementById('count-no-pagados').textContent = noPagadas;
                 
                 // Actualizar barra de progreso
                 document.getElementById('progress-bar-inner').style.width = `${porcentajeCompletado}%`;
                 
                 // Actualizar estadísticas
-                document.getElementById('total-number').textContent = totalPersonas;
+                document.getElementById('total-number').textContent = pagadas;
                 document.getElementById('monto-total').textContent = `$${montoTotalDistribuido.toLocaleString()}`;
                 document.getElementById('monto-individual-stat').textContent = `$${montoIndividual.toLocaleString()}`;
                 document.getElementById('completado-number').textContent = `${porcentajeCompletado.toFixed(1)}%`;
@@ -847,13 +921,25 @@
                     
                     // Agregar estado de reembolso
                     const tdEstado = document.createElement('td');
-                    tdEstado.className = 'pagado';
-                    tdEstado.innerHTML = '✅ Reembolso pagado';
+                    if (row.pagado) {
+                        tdEstado.className = 'pagado';
+                        tdEstado.innerHTML = '✅ Reembolso pagado';
+                    } else {
+                        tdEstado.className = 'no-pagado';
+                        tdEstado.innerHTML = '❌ Pendiente de pago';
+                    }
                     tr.appendChild(tdEstado);
                     
                     // Agregar monto
                     const tdMonto = document.createElement('td');
-                    tdMonto.textContent = `$${montoIndividual.toLocaleString()}`;
+                    if (row.pagado) {
+                        tdMonto.textContent = `$${montoIndividual.toLocaleString()}`;
+                        tdMonto.style.fontWeight = 'bold';
+                        tdMonto.style.color = '#27ae60';
+                    } else {
+                        tdMonto.textContent = '$0';
+                        tdMonto.style.color = '#e74c3c';
+                    }
                     tr.appendChild(tdMonto);
                     
                     tableBody.appendChild(tr);
@@ -867,37 +953,22 @@
                 nextPageButton.disabled = currentPage === totalPages || totalPages === 0;
             }
             
-            function updateCharts(sexos, tiposSangre) {
+            function updateCharts(sexosPagados, municipiosPagados, personasPagadas, personasNoPagadas) {
                 // Destruir gráficos existentes si los hay
-                if (distribucionChartInstance) {
-                    distribucionChartInstance.destroy();
-                }
-                if (sexoChartInstance) {
-                    sexoChartInstance.destroy();
-                }
-                if (sangreChartInstance) {
-                    sangreChartInstance.destroy();
-                }
+                if (estadoPagosChartInstance) estadoPagosChartInstance.destroy();
+                if (sexoChartInstance) sexoChartInstance.destroy();
+                if (municipioChartInstance) municipioChartInstance.destroy();
                 
-                // Gráfico de distribución por sexo
-                const ctx1 = document.getElementById('distribucionChart').getContext('2d');
-                const sexosLabels = Object.keys(sexos);
-                const sexosData = Object.values(sexos);
-                
-                distribucionChartInstance = new Chart(ctx1, {
-                    type: 'pie',
+                // Gráfico de estado de pagos
+                const ctx1 = document.getElementById('estadoPagosChart').getContext('2d');
+                estadoPagosChartInstance = new Chart(ctx1, {
+                    type: 'doughnut',
                     data: {
-                        labels: sexosLabels,
+                        labels: ['Pagados', 'No Pagados'],
                         datasets: [{
-                            data: sexosData,
-                            backgroundColor: [
-                                '#36a2eb', '#ff6384', '#4bc0c0', '#ffce56',
-                                '#9966ff', '#ff9f40', '#c9cbcf'
-                            ],
-                            hoverBackgroundColor: [
-                                '#2980b9', '#e74c3c', '#3cb4a9', '#e6b91d',
-                                '#7d5fff', '#e67e22', '#b0b0b0'
-                            ],
+                            data: [personasPagadas, personasNoPagadas],
+                            backgroundColor: ['#2ecc71', '#e74c3c'],
+                            hoverBackgroundColor: ['#27ae60', '#c0392b'],
                             borderWidth: 0,
                             borderRadius: 6
                         }]
@@ -916,31 +987,21 @@
                                     padding: 20,
                                     color: '#212529'
                                 }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${context.raw} personas (${Math.round(context.raw/currentData.length*100)}%)`;
-                                    }
-                                }
                             }
                         }
                     }
                 });
                 
-                // Gráfico por sexo (barras)
+                // Gráfico por sexo (solo pagados)
                 const ctx2 = document.getElementById('sexoChart').getContext('2d');
-                
                 sexoChartInstance = new Chart(ctx2, {
                     type: 'bar',
                     data: {
-                        labels: Object.keys(sexos),
+                        labels: Object.keys(sexosPagados),
                         datasets: [{
-                            label: 'Personas por sexo',
-                            data: Object.values(sexos),
-                            backgroundColor: [
-                                '#36a2eb', '#ff6384', '#4bc0c0'
-                            ],
+                            label: 'Personas pagadas por sexo',
+                            data: Object.values(sexosPagados),
+                            backgroundColor: ['#36a2eb', '#ff6384', '#4bc0c0'],
                             borderWidth: 0,
                             borderRadius: 6
                         }]
@@ -964,20 +1025,18 @@
                     }
                 });
                 
-                // Gráfico por tipo de sangre
-                const ctx3 = document.getElementById('sangreChart').getContext('2d');
-                const sangreLabels = Object.keys(tiposSangre);
-                const sangreData = Object.values(tiposSangre);
-                
-                sangreChartInstance = new Chart(ctx3, {
-                    type: 'doughnut',
+                // Gráfico por municipio (solo pagados)
+                const ctx3 = document.getElementById('municipioChart').getContext('2d');
+                municipioChartInstance = new Chart(ctx3, {
+                    type: 'pie',
                     data: {
-                        labels: sangreLabels,
+                        labels: Object.keys(municipiosPagados),
                         datasets: [{
-                            data: sangreData,
+                            data: Object.values(municipiosPagados),
                             backgroundColor: [
-                                '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0',
-                                '#9966ff', '#ff9f40', '#c9cbcf', '#2ecc71'
+                                '#36a2eb', '#ff6384', '#4bc0c0', '#ffce56',
+                                '#9966ff', '#ff9f40', '#c9cbcf', '#2ecc71',
+                                '#9b59b6', '#1abc9c', '#34495e', '#f39c12'
                             ],
                             borderWidth: 0,
                             borderRadius: 6
@@ -991,10 +1050,10 @@
                                 position: 'bottom',
                                 labels: {
                                     font: {
-                                        size: 14,
+                                        size: 12,
                                         family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
                                     },
-                                    padding: 20,
+                                    padding: 15,
                                     color: '#212529'
                                 }
                             }
@@ -1011,6 +1070,34 @@
             
             if (currentData.length > 0) {
                 processData(currentData);
+            }
+        }
+
+        // Función para filtrar la tabla
+        function filtrarTabla(filtro) {
+            currentFilter = filtro;
+            
+            // Actualizar botones activos
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            aplicarFiltro(filtro);
+            currentPage = 1;
+            renderTable();
+        }
+
+        function aplicarFiltro(filtro) {
+            switch(filtro) {
+                case 'pagados':
+                    filteredData = currentData.filter(row => row.pagado);
+                    break;
+                case 'no-pagados':
+                    filteredData = currentData.filter(row => !row.pagado);
+                    break;
+                default:
+                    filteredData = [...currentData];
             }
         }
     </script>
