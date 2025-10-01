@@ -369,7 +369,7 @@
             height: 100%;
             background: linear-gradient(to right, #2ecc71, #27ae60);
             border-radius: 10px;
-            width: 100%;
+            transition: width 0.5s ease;
         }
         
         .debug-info {
@@ -382,13 +382,40 @@
             max-height: 200px;
             overflow-y: auto;
         }
+
+        .config-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .config-input {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .config-input label {
+            font-weight: bold;
+            min-width: 200px;
+        }
+
+        .config-input input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 150px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Dashboard de Reembolsos Pagados</h1>
-            <p class="subtitle">Sistema de visualización de reembolsos por valor de <span class="highlight">$4,320,000 pesos</span></p>
+            <p class="subtitle">Sistema inteligente de visualización de reembolsos</p>
         </header>
         
         <div class="upload-section">
@@ -403,16 +430,34 @@
             <div id="status-message" class="status-message hidden"></div>
             <div id="debug-info" class="debug-info hidden"></div>
         </div>
+
+        <div id="config-section" class="config-section hidden">
+            <h3>Configuración del Presupuesto</h3>
+            <div class="config-input">
+                <label for="presupuesto-total">Presupuesto Total Disponible:</label>
+                <input type="number" id="presupuesto-total" value="3420000">
+            </div>
+            <div class="config-input">
+                <label for="monto-individual">Monto Individual por Persona:</label>
+                <input type="number" id="monto-individual" value="90000">
+            </div>
+            <button class="btn" onclick="actualizarCalculos()">Actualizar Cálculos</button>
+        </div>
         
         <div id="dashboard-content" class="hidden">
             <div class="amount-display">
-                <div>Monto total distribuido: <span class="highlight">$4,320,000 pesos</span></div>
-                <div>Monto individual: <span class="highlight">$90,000 pesos</span> por persona</div>
-                <div>Total de personas beneficiadas: <span id="total-personas" class="highlight">48</span></div>
+                <div>Presupuesto total: <span id="presupuesto-display" class="highlight">$3,420,000 pesos</span></div>
+                <div>Monto individual: <span id="monto-individual-display" class="highlight">$90,000 pesos</span> por persona</div>
+                <div>Total de personas beneficiadas: <span id="total-personas" class="highlight">15</span></div>
+                <div>Monto total distribuido: <span id="monto-total-distribuido" class="highlight">$1,350,000 pesos</span></div>
+                <div>Presupuesto restante: <span id="presupuesto-restante" class="highlight">$2,070,000 pesos</span></div>
             </div>
             
             <div class="progress-bar">
-                <div class="progress"></div>
+                <div id="progress-bar-inner" class="progress" style="width: 39.5%"></div>
+            </div>
+            <div style="text-align: center; margin: 10px 0; font-weight: bold;">
+                <span id="porcentaje-completado">39.5%</span> completado
             </div>
             
             <div class="export-buttons">
@@ -426,19 +471,19 @@
                     <h2 class="card-title">Resumen de Reembolsos</h2>
                     <div class="stats">
                         <div class="stat-card">
-                            <div id="total-number" class="stat-number">48</div>
+                            <div id="total-number" class="stat-number">15</div>
                             <div class="stat-label">Total Personas</div>
                         </div>
                         <div class="stat-card">
-                            <div id="monto-total" class="stat-number">$4,320,000</div>
-                            <div class="stat-label">Monto Total</div>
+                            <div id="monto-total" class="stat-number">$1,350,000</div>
+                            <div class="stat-label">Monto Distribuido</div>
                         </div>
                         <div class="stat-card">
-                            <div id="monto-individual" class="stat-number">$90,000</div>
+                            <div id="monto-individual-stat" class="stat-number">$90,000</div>
                             <div class="stat-label">Monto Individual</div>
                         </div>
                         <div class="stat-card">
-                            <div id="completado-number" class="stat-number">100%</div>
+                            <div id="completado-number" class="stat-number">39.5%</div>
                             <div class="stat-label">Completado</div>
                         </div>
                     </div>
@@ -503,11 +548,10 @@
             <h3>¿Cómo usar este dashboard?</h3>
             <ol>
                 <li><strong>Sube cualquier archivo CSV</strong> - El sistema detectará automáticamente los encabezados</li>
-                <li>No importa el nombre de las columnas, el sistema identificará: nombres, documento, sexo, etc.</li>
+                <li><strong>Configura el presupuesto</strong> - Ajusta el monto total y el monto individual según tus datos reales</li>
+                <li>Los cálculos se actualizarán automáticamente basados en el número real de personas en tu archivo</li>
                 <li>Exporta los datos: Ve a <strong>Archivo → Descargar → Valores separados por comas (.csv)</strong></li>
-                <li>Haz clic en "Seleccionar archivo CSV" arriba y elige el archivo que descargaste</li>
                 <li>Los gráficos y estadísticas se generarán automáticamente con tus datos reales</li>
-                <li>Puedes buscar y paginar los resultados en la tabla</li>
             </ol>
         </div>
         
@@ -527,39 +571,22 @@
         let filteredData = [];
         let detectedHeaders = {};
         
+        // Configuración de presupuesto
+        let presupuestoTotal = 3420000;
+        let montoIndividual = 90000;
+
         // Mapeo inteligente de encabezados
         const headerMapping = {
-            // Documento/Identificación
             'documento': ['número de documento', 'documento', 'identificación', 'cedula', 'cedula', 'dni', 'id', 'no. de identificación', '#'],
-            
-            // Nombres
             'nombres': ['nombre', 'nombres', 'primer nombre', 'nombre completo', 'nombres y apellidos completos'],
-            
-            // Apellidos
             'apellidos': ['apellido', 'apellidos', 'primer apellido', 'segundo apellido'],
-            
-            // Sexo/Género
             'sexo': ['sexo', 'género', 'genero', 'sexo (m/f)', 'género (m/f)'],
-            
-            // Fecha de Nacimiento
             'fecha_nacimiento': ['fecha de nacimiento', 'nacimiento', 'fecha nacimiento', 'fechanac'],
-            
-            // Tipo de Sangre
             'tipo_sangre': ['tipo de sangre', 'sangre', 'grupo sanguineo', 'rh', 'tipo sanguíneo'],
-            
-            // Institución
             'institucion': ['institución', 'institucion', 'empresa', 'organización'],
-            
-            // Cargo/Rol
             'cargo': ['cargo', 'rol', 'cargo/rol', 'puesto', 'ocupación'],
-            
-            // Teléfono
             'telefono': ['teléfono', 'telefono', 'celular', 'móvil', 'teléfono móvil'],
-            
-            // Email
             'email': ['correo', 'email', 'correo electrónico', 'e-mail'],
-            
-            // Lugar
             'lugar': ['lugar', 'origen', 'lugar origen', 'ciudad', 'departamento']
         };
 
@@ -569,12 +596,17 @@
             const statusMessage = document.getElementById('status-message');
             const debugInfo = document.getElementById('debug-info');
             const dashboardContent = document.getElementById('dashboard-content');
+            const configSection = document.getElementById('config-section');
             const searchInput = document.getElementById('search-input');
             const itemsPerPageSelect = document.getElementById('items-per-page-select');
             const prevPageButton = document.getElementById('prev-page');
             const nextPageButton = document.getElementById('next-page');
             const pageInfo = document.getElementById('page-info');
             
+            // Configurar inputs de presupuesto
+            document.getElementById('presupuesto-total').value = presupuestoTotal;
+            document.getElementById('monto-individual').value = montoIndividual;
+
             // Configurar el evento para cargar el archivo
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
@@ -602,13 +634,21 @@
                         detectHeaders(results.meta.fields);
                         
                         // Procesar los datos con los encabezados detectados
-                        currentData = results.data;
+                        currentData = results.data.filter(row => {
+                            // Filtrar filas vacías
+                            return Object.values(row).some(value => value && value.toString().trim() !== '');
+                        });
+                        
                         filteredData = [...currentData];
+                        
+                        // Mostrar sección de configuración y dashboard
+                        configSection.classList.remove('hidden');
+                        dashboardContent.classList.remove('hidden');
+                        
                         processData(currentData);
                         
                         statusMessage.textContent = `Datos cargados correctamente: ${currentData.length} registros procesados. Encabezados detectados automáticamente.`;
                         statusMessage.className = 'status-message success';
-                        dashboardContent.classList.remove('hidden');
                         renderTable();
                     },
                     error: function(error) {
@@ -705,11 +745,14 @@
             
             function processData(data) {
                 // Contadores para estadísticas
-                let total = data.length;
+                let totalPersonas = data.length;
                 let sexos = {};
                 let tiposSangre = {};
-                let montoTotal = 4320000;
-                let montoIndividual = 90000;
+                
+                // Calcular montos reales basados en los datos
+                let montoTotalDistribuido = totalPersonas * montoIndividual;
+                let presupuestoRestante = presupuestoTotal - montoTotalDistribuido;
+                let porcentajeCompletado = (montoTotalDistribuido / presupuestoTotal) * 100;
                 
                 // Procesar cada registro
                 data.forEach(row => {
@@ -734,14 +777,32 @@
                     }
                 });
                 
-                // Actualizar estadísticas
-                document.getElementById('total-number').textContent = total;
-                document.getElementById('total-personas').textContent = total;
-                document.getElementById('monto-total').textContent = `$${montoTotal.toLocaleString()}`;
-                document.getElementById('monto-individual').textContent = `$${montoIndividual.toLocaleString()}`;
+                // Actualizar estadísticas en la interfaz
+                actualizarInterfaz(totalPersonas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado);
                 
                 // Preparar datos para gráficos
                 updateCharts(sexos, tiposSangre);
+            }
+            
+            function actualizarInterfaz(totalPersonas, montoTotalDistribuido, presupuestoRestante, porcentajeCompletado) {
+                // Actualizar displays principales
+                document.getElementById('total-personas').textContent = totalPersonas;
+                document.getElementById('monto-total-distribuido').textContent = `$${montoTotalDistribuido.toLocaleString()} pesos`;
+                document.getElementById('presupuesto-restante').textContent = `$${presupuestoRestante.toLocaleString()} pesos`;
+                document.getElementById('porcentaje-completado').textContent = `${porcentajeCompletado.toFixed(1)}%`;
+                
+                // Actualizar barra de progreso
+                document.getElementById('progress-bar-inner').style.width = `${porcentajeCompletado}%`;
+                
+                // Actualizar estadísticas
+                document.getElementById('total-number').textContent = totalPersonas;
+                document.getElementById('monto-total').textContent = `$${montoTotalDistribuido.toLocaleString()}`;
+                document.getElementById('monto-individual-stat').textContent = `$${montoIndividual.toLocaleString()}`;
+                document.getElementById('completado-number').textContent = `${porcentajeCompletado.toFixed(1)}%`;
+                
+                // Actualizar displays de configuración
+                document.getElementById('presupuesto-display').textContent = `$${presupuestoTotal.toLocaleString()} pesos`;
+                document.getElementById('monto-individual-display').textContent = `$${montoIndividual.toLocaleString()} pesos`;
             }
             
             function renderTable() {
@@ -772,9 +833,6 @@
                 const startIndex = (currentPage - 1) * itemsPerPage;
                 const endIndex = startIndex + itemsPerPage;
                 const pageData = filteredData.slice(startIndex, endIndex);
-                
-                // Monto individual fijo
-                const montoIndividual = 90000;
                 
                 // Llenar la tabla con los datos de la página actual
                 pageData.forEach(row => {
@@ -945,6 +1003,16 @@
                 });
             }
         });
+
+        // Función para actualizar cálculos cuando cambia la configuración
+        function actualizarCalculos() {
+            presupuestoTotal = parseInt(document.getElementById('presupuesto-total').value) || 3420000;
+            montoIndividual = parseInt(document.getElementById('monto-individual').value) || 90000;
+            
+            if (currentData.length > 0) {
+                processData(currentData);
+            }
+        }
     </script>
 </body>
 </html>
